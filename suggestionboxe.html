@@ -1,0 +1,2142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suggestion Box - ScholarX Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #4A6FFF;
+            --primary-dark: #3A5BDF;
+            --secondary: #1A1F36;
+            --accent: #00C9B7;
+            --light: #F8FAFC;
+            --gray-light: #E2E8F0;
+            --gray: #94A3B8;
+            --gray-dark: #64748B;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --sidebar-width: 260px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #F8FAFC;
+            color: #334155;
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar - Same as other pages */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--secondary) 0%, #0F172A 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .app-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .admin-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray-light);
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 24px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: var(--transition);
+            margin: 4px 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: rgba(74, 111, 255, 0.15);
+            color: white;
+            border-left: 4px solid var(--primary);
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .profile-pic {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+        }
+
+        .profile-info h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .profile-info p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .logout-btn {
+            width: 100%;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 30px;
+            transition: var(--transition);
+        }
+
+        /* Page Header */
+        .page-header {
+            background: white;
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .page-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: white;
+        }
+
+        .header-content h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .header-content p {
+            color: var(--gray-dark);
+            font-size: 16px;
+            max-width: 600px;
+        }
+
+        /* Create Button */
+        .create-section {
+            margin-bottom: 30px;
+        }
+
+        .create-btn {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(74, 111, 255, 0.25);
+        }
+
+        .create-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(74, 111, 255, 0.3);
+        }
+
+        /* Manage Section */
+        .manage-section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        /* Suggestion Boxes Grid */
+        .boxes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .box-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            border: 2px solid var(--gray-light);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .box-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .box-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .box-title h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+
+        .box-date {
+            font-size: 13px;
+            color: var(--gray);
+        }
+
+        .box-stats {
+            background: var(--light);
+            padding: 15px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 20px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .stat-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .stat-label {
+            color: var(--gray-dark);
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .departments-list {
+            margin-bottom: 20px;
+        }
+
+        .department-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .department-item:last-child {
+            border-bottom: none;
+        }
+
+        .dept-name {
+            font-weight: 500;
+            color: var(--secondary);
+        }
+
+        .dept-choices {
+            font-size: 13px;
+            color: var(--gray);
+            background: var(--light);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .box-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .btn-view {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-edit {
+            background: rgba(74, 111, 255, 0.1);
+            color: var(--primary);
+        }
+
+        .btn-edit:hover {
+            background: rgba(74, 111, 255, 0.2);
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-download {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .btn-download:hover {
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            grid-column: 1 / -1;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            color: var(--gray-light);
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--gray-dark);
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            max-width: 400px;
+            margin: 0 auto 24px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            padding: 24px 30px;
+            border-bottom: 1px solid var(--gray-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .modal-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--gray);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-modal:hover {
+            color: var(--danger);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid var(--gray-light);
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            position: sticky;
+            bottom: 0;
+            background: white;
+        }
+
+        /* Form Styles */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 111, 255, 0.1);
+        }
+
+        /* Departments Section */
+        .departments-section {
+            background: var(--light);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .departments-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .dept-counter {
+            background: var(--primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .dept-input-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 15px;
+            align-items: start;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--gray-light);
+        }
+
+        .dept-main-input {
+            display: grid;
+            gap: 15px;
+        }
+
+        .dept-headers-section {
+            background: #f9fafc;
+            border-radius: var(--radius-sm);
+            padding: 15px;
+            margin-top: 10px;
+            border: 1px solid var(--gray-light);
+        }
+
+        .headers-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .header-input-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .dept-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .btn-remove {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .btn-remove:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-add-choice {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .btn-add-choice:hover {
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        /* Choices List */
+        .choices-list {
+            margin-top: 15px;
+            padding-left: 10px;
+        }
+
+        .choice-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--gray-light);
+        }
+
+        .choice-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--gray-light);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .choice-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn-remove-choice {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-remove-choice:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-add-header {
+            padding: 8px 16px;
+            background: var(--light);
+            color: var(--primary);
+            border: 1px solid var(--gray-light);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-add-header:hover {
+            background: rgba(74, 111, 255, 0.1);
+            border-color: var(--primary);
+        }
+
+        .btn-add-dept {
+            width: 100%;
+            padding: 15px;
+            background: var(--light);
+            color: var(--primary);
+            border: 2px dashed var(--gray-light);
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-add-dept:hover {
+            border-color: var(--primary);
+            background: rgba(74, 111, 255, 0.05);
+        }
+
+        /* Statistics in Modal */
+        .stats-section {
+            background: var(--light);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .stats-header h3 {
+            font-size: 18px;
+            color: var(--secondary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card-small {
+            background: white;
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            border: 1px solid var(--gray-light);
+        }
+
+        .stat-card-small h4 {
+            font-size: 16px;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+
+        .choice-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .choice-stat:last-child {
+            border-bottom: none;
+        }
+
+        .choice-name {
+            color: var(--gray-dark);
+            font-size: 14px;
+        }
+
+        .choice-votes {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vote-count {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .btn-vote {
+            padding: 6px 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-vote:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--secondary);
+            color: white;
+            padding: 16px 24px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 3000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            font-size: 20px;
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .boxes-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .dept-input-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-input-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="logo.png" alt="ScholarX Logo" class="app-logo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 100 100&quot;%3E%3Crect width=&quot;100&quot; height=&quot;100&quot; fill=&quot;%234A6FFF&quot;/%3E%3Ctext x=&quot;50&quot; y=&quot;60&quot; font-family=&quot;Arial&quot; font-size=&quot;40&quot; fill=&quot;white&quot; text-anchor=&quot;middle&quot;%3ESX%3C/text%3E%3C/svg%3E';">
+            <div>
+                <div class="app-name">ScholarX</div>
+                <div class="admin-badge">Institutional Admin</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="Admindashboard.html" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="suggestionboxe.html" class="nav-item active">
+                <i class="fas fa-lightbulb"></i>
+                <span>Suggestion Box</span>
+            </a>
+            <a href="ratingandfeedback.html" class="nav-item">
+                <i class="fas fa-star"></i>
+                <span>Rating & Feedback</span>
+            </a>
+            <a href="adminLH.html" class="nav-item">
+                <i class="fas fa-book-open"></i>
+                <span>Learning HUB</span>
+            </a>
+            <a href="settingA.html" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <img id="profilePicture" src="default-avatar.png" alt="Profile" class="profile-pic" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22%3E%3Ccircle%20cx=%2250%22%20cy=%2250%22%20r=%2245%22%20fill=%22%234A6FFF%22/%3E%3Ctext%20x=%2250%22%20y=%2260%22%20font-family=%22Arial%22%20font-size=%2240%22%20fill=%22white%22%20text-anchor=%22middle%22%3EA%3C/text%3E%3C/svg%3E'">
+                <div class="profile-info">
+                    <h4 id="adminName">Administrator</h4>
+                    <p id="adminRole">Super Admin</p>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-icon">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            <div class="header-content">
+                <h1>Suggestion Box Management</h1>
+                <p>Create and manage suggestion boxes for departments. Each department can have multiple heads with credentials to access their feedback dashboard.</p>
+            </div>
+        </div>
+
+        <!-- Create Button -->
+        <div class="create-section">
+            <button class="create-btn" id="createBoxBtn">
+                <i class="fas fa-plus-circle"></i>
+                Create New Suggestion Box
+            </button>
+        </div>
+
+        <!-- Manage Section -->
+        <div class="manage-section">
+            <div class="section-header">
+                <h2>Manage Suggestion Boxes</h2>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchBoxes" placeholder="Search suggestion boxes...">
+                </div>
+            </div>
+            
+            <div class="boxes-grid" id="boxesGrid">
+                <!-- Suggestion boxes will be populated here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Create/Edit Modal -->
+    <div id="boxModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Create Suggestion Box</h2>
+                <button class="close-modal" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="boxForm">
+                    <div class="form-group">
+                        <label class="form-label">Box Name *</label>
+                        <input type="text" id="boxName" class="form-control" required placeholder="e.g., Campus Improvements Suggestions">
+                    </div>
+
+                    <!-- Departments Section -->
+                    <div class="form-group">
+                        <label class="form-label">Departments & Options</label>
+                        <div class="departments-section" id="departmentsContainer">
+                            <!-- Departments will be added here -->
+                        </div>
+                        <button type="button" class="btn-add-dept" onclick="addDepartment()">
+                            <i class="fas fa-plus"></i>
+                            Add Department
+                        </button>
+                    </div>
+
+                    <!-- Statistics Section (only visible in edit mode) -->
+                    <div class="stats-section" id="statsSection" style="display: none;">
+                        <div class="stats-header">
+                            <h3>Voting Statistics</h3>
+                            <span class="dept-counter" id="totalVotes">0 total votes</span>
+                        </div>
+                        <div class="stats-grid" id="statsGrid">
+                            <!-- Statistics will be populated here -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-download" id="downloadPDFBtn" style="display: none; margin-right: auto;">
+                    <i class="fas fa-download"></i>
+                    Download PDF Report
+                </button>
+                <button class="btn btn-delete" id="deleteBoxBtn" style="display: none;">
+                    <i class="fas fa-trash"></i>
+                    Delete Box
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveBox()">Save Box</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Operation completed successfully!</span>
+    </div>
+
+    <script>
+        // Global variables
+        let suggestionBoxes = [];
+        let currentEditIndex = null;
+        let currentUser = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            checkAuthentication();
+            
+            // Load user data
+            loadUserData();
+            
+            // Load suggestion boxes
+            loadSuggestionBoxes();
+            
+            // Setup mobile menu toggle
+            document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
+            
+            // Setup search functionality
+            document.getElementById('searchBoxes').addEventListener('input', filterBoxes);
+            
+            // Setup create button
+            document.getElementById('createBoxBtn').addEventListener('click', openCreateModal);
+            
+            // Setup PDF download button
+            document.getElementById('downloadPDFBtn').addEventListener('click', generatePDFReport);
+            
+            // Initialize with one department
+            resetDepartments();
+        });
+
+        // Check authentication
+        function checkAuthentication() {
+            const currentUser = localStorage.getItem('currentUser');
+            const isAuthenticated = sessionStorage.getItem('isAuthenticated');
+            
+            if (!currentUser || isAuthenticated !== 'true') {
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Load user data
+        function loadUserData() {
+            const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            currentUser = userData;
+            
+            if (userData.name) {
+                document.getElementById('adminName').textContent = userData.name;
+            }
+            
+            if (userData.role) {
+                document.getElementById('adminRole').textContent = userData.role;
+            }
+            
+            if (userData.profilePic) {
+                document.getElementById('profilePicture').src = userData.profilePic;
+            }
+        }
+
+        // Load suggestion boxes
+        function loadSuggestionBoxes() {
+            const stored = JSON.parse(localStorage.getItem('suggestionBoxes') || '[]');
+            suggestionBoxes = stored;
+            renderBoxes();
+        }
+
+        // Save suggestion boxes
+        function saveSuggestionBoxes() {
+            localStorage.setItem('suggestionBoxes', JSON.stringify(suggestionBoxes));
+        }
+
+        // Load statistics
+        function loadStatistics() {
+            return JSON.parse(localStorage.getItem('suggestionStats') || '{}');
+        }
+
+        // Save statistics
+        function saveStatistics(stats) {
+            localStorage.setItem('suggestionStats', JSON.stringify(stats));
+        }
+
+        // Load department data (separate arrays for each department)
+        function loadDepartmentData(boxIndex, deptIndex) {
+            const key = `deptData_${boxIndex}_${deptIndex}`;
+            return JSON.parse(localStorage.getItem(key) || '[]');
+        }
+
+        // Save department data
+        function saveDepartmentData(boxIndex, deptIndex, data) {
+            const key = `deptData_${boxIndex}_${deptIndex}`;
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        // Render suggestion boxes
+        function renderBoxes() {
+            const container = document.getElementById('boxesGrid');
+            
+            if (suggestionBoxes.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <h3>No Suggestion Boxes Created</h3>
+                        <p>Create your first suggestion box to start collecting feedback from departments.</p>
+                        <button class="btn btn-primary" onclick="openCreateModal()" style="margin-top: 20px;">
+                            <i class="fas fa-plus-circle"></i>
+                            Create First Box
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const stats = loadStatistics();
+            container.innerHTML = '';
+            
+            suggestionBoxes.forEach((box, index) => {
+                // Calculate box statistics
+                let totalChoices = 0;
+                let totalVotes = 0;
+                let totalHeads = 0;
+                
+                box.departments.forEach((dept, deptIndex) => {
+                    totalChoices += box.choices[deptIndex]?.length || 0;
+                    totalHeads += box.departmentHeads?.[deptIndex]?.length || 0;
+                    
+                    box.choices[deptIndex]?.forEach((choice, choiceIndex) => {
+                        const statKey = `${index}-${deptIndex}-${choiceIndex}`;
+                        totalVotes += stats[statKey] || 0;
+                    });
+                });
+                
+                const createdAt = new Date(box.createdAt);
+                const dateStr = createdAt.toLocaleDateString();
+                
+                const card = document.createElement('div');
+                card.className = 'box-card';
+                card.innerHTML = `
+                    <div class="box-header">
+                        <div class="box-title">
+                            <h3>${box.name}</h3>
+                            <div class="box-date">Created: ${dateStr}</div>
+                        </div>
+                        <div class="dept-counter">${box.departments.length} dept${box.departments.length !== 1 ? 's' : ''}</div>
+                    </div>
+                    
+                    <div class="box-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">Departments:</span>
+                            <span class="stat-value">${box.departments.length}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Department Heads:</span>
+                            <span class="stat-value">${totalHeads}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Options:</span>
+                            <span class="stat-value">${totalChoices}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Total Votes:</span>
+                            <span class="stat-value">${totalVotes}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="departments-list">
+                        ${box.departments.map((dept, deptIndex) => `
+                            <div class="department-item">
+                                <span class="dept-name">${dept}</span>
+                                <span class="dept-choices">
+                                    ${box.choices[deptIndex]?.length || 0} options
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="box-actions">
+                        <button class="btn btn-view" onclick="viewBox(${index})">
+                            <i class="fas fa-chart-bar"></i>
+                            View Stats
+                        </button>
+                        <button class="btn btn-edit" onclick="editBox(${index})">
+                            <i class="fas fa-edit"></i>
+                            Edit
+                        </button>
+                        <button class="btn btn-download" onclick="downloadBoxPDF(${index})">
+                            <i class="fas fa-download"></i>
+                            PDF Report
+                        </button>
+                        <button class="btn btn-delete" onclick="deleteBox(${index})">
+                            <i class="fas fa-trash"></i>
+                            Delete
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Filter boxes by search
+        function filterBoxes() {
+            const searchTerm = document.getElementById('searchBoxes').value.toLowerCase();
+            const boxes = document.querySelectorAll('.box-card');
+            
+            boxes.forEach(card => {
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                const deptNames = Array.from(card.querySelectorAll('.dept-name'))
+                    .map(el => el.textContent.toLowerCase())
+                    .join(' ');
+                
+                if (title.includes(searchTerm) || deptNames.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Department management
+        function resetDepartments() {
+            const container = document.getElementById('departmentsContainer');
+            container.innerHTML = '';
+            addDepartment();
+        }
+
+        function addDepartment(deptName = '', choices = [], heads = []) {
+            const container = document.getElementById('departmentsContainer');
+            const deptIndex = container.children.length;
+            
+            const deptGroup = document.createElement('div');
+            deptGroup.className = 'dept-input-group';
+            deptGroup.dataset.index = deptIndex;
+            
+            deptGroup.innerHTML = `
+                <div class="dept-main-input">
+                    <input type="text" class="form-control dept-name" 
+                           placeholder="Department Name" 
+                           value="${deptName}" 
+                           required>
+                    
+                    <!-- Department Heads Section -->
+                    <div class="dept-headers-section" id="headers-${deptIndex}">
+                        <div class="headers-title">
+                            <i class="fas fa-user-tie"></i>
+                            Department Heads (Name & Passcode)
+                        </div>
+                        ${heads.map((head, headIndex) => `
+                            <div class="header-input-row" data-head-index="${headIndex}">
+                                <input type="text" class="form-control head-name" 
+                                       placeholder="Head Name" 
+                                       value="${head.name || ''}" 
+                                       required>
+                                <input type="text" class="form-control head-passcode" 
+                                       placeholder="Passcode" 
+                                       value="${head.passcode || ''}" 
+                                       required>
+                                <button type="button" class="btn-remove-choice" onclick="removeHead(${deptIndex}, ${headIndex})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        `).join('')}
+                        <button type="button" class="btn-add-header" onclick="addHead(${deptIndex})">
+                            <i class="fas fa-plus"></i>
+                            Add Head
+                        </button>
+                    </div>
+                    
+                    <!-- Multiple Choice Options -->
+                    <div style="margin-top: 15px;">
+                        <label class="form-label" style="margin-bottom: 10px;">Multiple Choice Suggestions:</label>
+                        <div class="choices-list" id="choices-${deptIndex}">
+                            ${choices.map((choice, choiceIndex) => `
+                                <div class="choice-item">
+                                    <input type="text" class="choice-input" 
+                                           placeholder="Option ${choiceIndex + 1}" 
+                                           value="${choice}" 
+                                           required>
+                                    <button type="button" class="btn-remove-choice" onclick="removeChoice(${deptIndex}, ${choiceIndex})">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button type="button" class="btn btn-add-choice" onclick="addChoice(${deptIndex})" style="margin-top: 10px;">
+                            <i class="fas fa-plus"></i>
+                            Add Option
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="dept-actions">
+                    <button type="button" class="btn-icon btn-remove" onclick="removeDepartment(${deptIndex})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(deptGroup);
+            updateDeptCounter();
+        }
+
+        function addHead(deptIndex) {
+            const headersSection = document.getElementById(`headers-${deptIndex}`);
+            const headRows = headersSection.querySelectorAll('.header-input-row');
+            const headIndex = headRows.length;
+            
+            const headRow = document.createElement('div');
+            headRow.className = 'header-input-row';
+            headRow.dataset.headIndex = headIndex;
+            headRow.innerHTML = `
+                <input type="text" class="form-control head-name" 
+                       placeholder="Head Name" 
+                       required>
+                <input type="text" class="form-control head-passcode" 
+                       placeholder="Passcode" 
+                       required>
+                <button type="button" class="btn-remove-choice" onclick="removeHead(${deptIndex}, ${headIndex})">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            // Insert before the "Add Head" button
+            const addBtn = headersSection.querySelector('.btn-add-header');
+            headersSection.insertBefore(headRow, addBtn);
+            
+            // Update indexes for all heads
+            updateHeadIndexes(deptIndex);
+        }
+
+        function removeHead(deptIndex, headIndex) {
+            const headersSection = document.getElementById(`headers-${deptIndex}`);
+            const headRow = headersSection.querySelector(`[data-head-index="${headIndex}"]`);
+            
+            // Confirm removal
+            const name = headRow.querySelector('.head-name').value.trim();
+            if (name !== '') {
+                if (!confirm(`Remove head "${name}"?`)) {
+                    return;
+                }
+            }
+            
+            headersSection.removeChild(headRow);
+            updateHeadIndexes(deptIndex);
+        }
+
+        function updateHeadIndexes(deptIndex) {
+            const headersSection = document.getElementById(`headers-${deptIndex}`);
+            const headRows = headersSection.querySelectorAll('.header-input-row');
+            
+            headRows.forEach((row, index) => {
+                row.dataset.headIndex = index;
+                row.querySelector('.btn-remove-choice').setAttribute('onclick', `removeHead(${deptIndex}, ${index})`);
+            });
+        }
+
+        function addChoice(deptIndex) {
+            const choicesList = document.getElementById(`choices-${deptIndex}`);
+            const choiceIndex = choicesList.children.length;
+            
+            const choiceItem = document.createElement('div');
+            choiceItem.className = 'choice-item';
+            choiceItem.innerHTML = `
+                <input type="text" class="choice-input" 
+                       placeholder="Option ${choiceIndex + 1}" 
+                       required>
+                <button type="button" class="btn-remove-choice" onclick="removeChoice(${deptIndex}, ${choiceIndex})">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            choicesList.appendChild(choiceItem);
+        }
+
+        function removeChoice(deptIndex, choiceIndex) {
+            const choicesList = document.getElementById(`choices-${deptIndex}`);
+            const choiceItem = choicesList.children[choiceIndex];
+            
+            // Confirm removal
+            if (choiceItem.querySelector('.choice-input').value.trim() !== '') {
+                if (!confirm('Remove this option? Any votes will be lost.')) {
+                    return;
+                }
+            }
+            
+            choicesList.removeChild(choiceItem);
+            
+            // Update indexes for remaining choices
+            Array.from(choicesList.children).forEach((item, index) => {
+                item.querySelector('.btn-remove-choice').setAttribute('onclick', `removeChoice(${deptIndex}, ${index})`);
+            });
+        }
+
+        function removeDepartment(deptIndex) {
+            const container = document.getElementById('departmentsContainer');
+            const deptGroup = container.querySelector(`[data-index="${deptIndex}"]`);
+            
+            // Check if department has data
+            const deptName = deptGroup.querySelector('.dept-name').value.trim();
+            const choices = Array.from(deptGroup.querySelectorAll('.choice-input'))
+                .map(input => input.value.trim())
+                .filter(value => value !== '');
+            
+            if (deptName !== '' || choices.length > 0) {
+                if (!confirm('Remove this department? All options, heads, and votes will be lost.')) {
+                    return;
+                }
+            }
+            
+            container.removeChild(deptGroup);
+            
+            // Update indexes for remaining departments
+            Array.from(container.children).forEach((group, index) => {
+                group.dataset.index = index;
+                group.querySelector('.btn-remove-choice').setAttribute('onclick', `removeChoice(${index}, 0)`);
+                group.querySelector('.btn-add-choice').setAttribute('onclick', `addChoice(${index})`);
+                group.querySelector('.btn-remove').setAttribute('onclick', `removeDepartment(${index})`);
+                group.id = `choices-${index}`;
+            });
+            
+            updateDeptCounter();
+        }
+
+        function updateDeptCounter() {
+            const container = document.getElementById('departmentsContainer');
+            const count = container.children.length;
+            
+            // Update counter display if needed
+            const counterElements = document.querySelectorAll('.dept-counter');
+            counterElements.forEach(el => {
+                if (el.id !== 'totalVotes') {
+                    el.textContent = `${count} department${count !== 1 ? 's' : ''}`;
+                }
+            });
+        }
+
+        // Modal functions
+        function openCreateModal() {
+            currentEditIndex = null;
+            document.getElementById('modalTitle').textContent = 'Create Suggestion Box';
+            document.getElementById('boxModal').classList.add('active');
+            document.getElementById('boxForm').reset();
+            document.getElementById('statsSection').style.display = 'none';
+            document.getElementById('deleteBoxBtn').style.display = 'none';
+            document.getElementById('downloadPDFBtn').style.display = 'none';
+            resetDepartments();
+        }
+
+        function closeModal() {
+            document.getElementById('boxModal').classList.remove('active');
+            currentEditIndex = null;
+        }
+
+        function editBox(index) {
+            currentEditIndex = index;
+            const box = suggestionBoxes[index];
+            
+            document.getElementById('modalTitle').textContent = 'Edit Suggestion Box';
+            document.getElementById('boxModal').classList.add('active');
+            document.getElementById('boxName').value = box.name;
+            document.getElementById('deleteBoxBtn').style.display = 'flex';
+            document.getElementById('downloadPDFBtn').style.display = 'flex';
+            
+            // Clear and repopulate departments
+            resetDepartments();
+            const container = document.getElementById('departmentsContainer');
+            container.innerHTML = '';
+            
+            box.departments.forEach((dept, deptIndex) => {
+                addDepartment(
+                    dept, 
+                    box.choices[deptIndex] || [],
+                    box.departmentHeads?.[deptIndex] || []
+                );
+            });
+            
+            // Load and display statistics
+            loadAndDisplayStats();
+        }
+
+        function viewBox(index) {
+            currentEditIndex = index;
+            const box = suggestionBoxes[index];
+            
+            document.getElementById('modalTitle').textContent = 'Suggestion Box Statistics';
+            document.getElementById('boxModal').classList.add('active');
+            document.getElementById('boxName').value = box.name;
+            document.getElementById('boxName').disabled = true;
+            document.getElementById('deleteBoxBtn').style.display = 'none';
+            document.getElementById('downloadPDFBtn').style.display = 'flex';
+            
+            // Clear and repopulate departments (read-only)
+            resetDepartments();
+            const container = document.getElementById('departmentsContainer');
+            container.innerHTML = '';
+            
+            box.departments.forEach((dept, deptIndex) => {
+                const deptGroup = document.createElement('div');
+                deptGroup.className = 'dept-input-group';
+                deptGroup.style.backgroundColor = 'var(--light)';
+                
+                // Get department heads
+                const heads = box.departmentHeads?.[deptIndex] || [];
+                
+                deptGroup.innerHTML = `
+                    <div class="dept-main-input">
+                        <input type="text" class="form-control dept-name" 
+                               value="${dept}" 
+                               disabled
+                               style="background: white;">
+                        
+                        <!-- Department Heads Display -->
+                        ${heads.length > 0 ? `
+                            <div class="dept-headers-section" style="background: white;">
+                                <div class="headers-title">
+                                    <i class="fas fa-user-tie"></i>
+                                    Department Heads (${heads.length})
+                                </div>
+                                ${heads.map(head => `
+                                    <div style="padding: 8px; border-bottom: 1px solid var(--gray-light); font-size: 14px;">
+                                        <strong>${head.name}</strong> • Passcode: ${head.passcode}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        
+                        <!-- Options Display -->
+                        <div style="margin-top: 15px;">
+                            <label class="form-label" style="margin-bottom: 10px;">Options (${box.choices[deptIndex]?.length || 0}):</label>
+                            <div class="choices-list">
+                                ${(box.choices[deptIndex] || []).map(choice => `
+                                    <div class="choice-item" style="background: white;">
+                                        <input type="text" class="choice-input" 
+                                               value="${choice}" 
+                                               disabled
+                                               style="background: #f9f9f9;">
+                                        <div></div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(deptGroup);
+            });
+            
+            // Disable department management buttons
+            document.querySelector('.btn-add-dept').style.display = 'none';
+            
+            // Load and display statistics
+            loadAndDisplayStats();
+            
+            // Change save button to close button
+            const saveBtn = document.querySelector('.modal-footer .btn-primary');
+            saveBtn.innerHTML = '<i class="fas fa-times"></i> Close';
+            saveBtn.onclick = closeModal;
+        }
+
+        function loadAndDisplayStats() {
+            if (currentEditIndex === null) return;
+            
+            const stats = loadStatistics();
+            const box = suggestionBoxes[currentEditIndex];
+            const statsSection = document.getElementById('statsSection');
+            const statsGrid = document.getElementById('statsGrid');
+            
+            statsSection.style.display = 'block';
+            
+            let totalVotes = 0;
+            let statsHTML = '';
+            
+            box.departments.forEach((dept, deptIndex) => {
+                const choices = box.choices[deptIndex] || [];
+                
+                if (choices.length === 0) return;
+                
+                let deptVotes = 0;
+                let choicesHTML = '';
+                
+                choices.forEach((choice, choiceIndex) => {
+                    const statKey = `${currentEditIndex}-${deptIndex}-${choiceIndex}`;
+                    const votes = stats[statKey] || 0;
+                    deptVotes += votes;
+                    
+                    choicesHTML += `
+                        <div class="choice-stat">
+                            <span class="choice-name">${choice}</span>
+                            <div class="choice-votes">
+                                <span class="vote-count">${votes} vote${votes !== 1 ? 's' : ''}</span>
+                                <button class="btn-vote" onclick="voteForOption(${currentEditIndex}, ${deptIndex}, ${choiceIndex})">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    Vote
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                totalVotes += deptVotes;
+                
+                statsHTML += `
+                    <div class="stat-card-small">
+                        <h4>${dept}</h4>
+                        <div style="margin-bottom: 15px; color: var(--gray); font-size: 14px;">
+                            ${deptVotes} total vote${deptVotes !== 1 ? 's' : ''}
+                        </div>
+                        ${choicesHTML}
+                    </div>
+                `;
+            });
+            
+            document.getElementById('totalVotes').textContent = `${totalVotes} total vote${totalVotes !== 1 ? 's' : ''}`;
+            statsGrid.innerHTML = statsHTML;
+        }
+
+        // Vote for an option
+        function voteForOption(boxIndex, deptIndex, choiceIndex) {
+            const stats = loadStatistics();
+            const statKey = `${boxIndex}-${deptIndex}-${choiceIndex}`;
+            
+            stats[statKey] = (stats[statKey] || 0) + 1;
+            saveStatistics(stats);
+            
+            // Also save feedback data to department's own array
+            const box = suggestionBoxes[boxIndex];
+            const choice = box.choices[deptIndex][choiceIndex];
+            const deptData = loadDepartmentData(boxIndex, deptIndex);
+            
+            deptData.push({
+                type: 'vote',
+                choice: choice,
+                timestamp: new Date().toISOString(),
+                voteCount: stats[statKey]
+            });
+            
+            saveDepartmentData(boxIndex, deptIndex, deptData);
+            
+            showToast('Vote recorded successfully!', 'success');
+            loadAndDisplayStats();
+            
+            // Update the main view
+            renderBoxes();
+        }
+
+        // Save box
+        function saveBox() {
+            const boxName = document.getElementById('boxName').value.trim();
+            
+            // Collect departments, choices, and department heads
+            const departments = [];
+            const choices = [];
+            const departmentHeads = [];
+            
+            const deptGroups = document.querySelectorAll('.dept-input-group');
+            deptGroups.forEach(group => {
+                const deptName = group.querySelector('.dept-name').value.trim();
+                if (deptName !== '') {
+                    departments.push(deptName);
+                    
+                    // Collect choices
+                    const choiceInputs = group.querySelectorAll('.choice-input');
+                    const deptChoices = Array.from(choiceInputs)
+                        .map(input => input.value.trim())
+                        .filter(value => value !== '');
+                    choices.push(deptChoices);
+                    
+                    // Collect department heads
+                    const headRows = group.querySelectorAll('.header-input-row');
+                    const heads = Array.from(headRows).map(row => ({
+                        name: row.querySelector('.head-name').value.trim(),
+                        passcode: row.querySelector('.head-passcode').value.trim()
+                    })).filter(head => head.name !== '' && head.passcode !== '');
+                    departmentHeads.push(heads);
+                }
+            });
+            
+            // Validation
+            if (!boxName) {
+                showToast('Please enter a box name', 'error');
+                return;
+            }
+            
+            if (departments.length === 0) {
+                showToast('Please add at least one department', 'error');
+                return;
+            }
+            
+            // Check that each department has at least one option
+            for (let i = 0; i < departments.length; i++) {
+                if (choices[i].length === 0) {
+                    showToast(`Please add at least one option for "${departments[i]}"`, 'error');
+                    return;
+                }
+            }
+            
+            // Create box object
+            const box = {
+                name: boxName,
+                departments: departments,
+                choices: choices,
+                departmentHeads: departmentHeads,
+                createdAt: currentEditIndex !== null ? 
+                    suggestionBoxes[currentEditIndex].createdAt : 
+                    new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                createdBy: currentUser?.name || 'Administrator'
+            };
+            
+            // Save or update
+            if (currentEditIndex !== null) {
+                suggestionBoxes[currentEditIndex] = box;
+                showToast('Suggestion box updated successfully!', 'success');
+            } else {
+                suggestionBoxes.push(box);
+                showToast('Suggestion box created successfully!', 'success');
+            }
+            
+            saveSuggestionBoxes();
+            closeModal();
+            renderBoxes();
+        }
+
+        // Generate PDF report for a box
+        async function generatePDFReport() {
+            if (currentEditIndex === null) return;
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const box = suggestionBoxes[currentEditIndex];
+            const stats = loadStatistics();
+            
+            // Header
+            doc.setFillColor(26, 31, 54);
+            doc.rect(0, 0, 210, 30, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(24);
+            doc.setFont('helvetica', 'bold');
+            doc.text('ScholarX', 20, 20);
+            doc.setFontSize(12);
+            doc.text('Suggestion Box Report', 20, 27);
+            
+            // Footer
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(10);
+            const dateStr = new Date().toLocaleDateString();
+            doc.text(`Generated on: ${dateStr}`, 20, 280);
+            doc.text(`Page 1 of 1`, 190, 280, { align: 'right' });
+            
+            // Box Information
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text(box.name, 20, 50);
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Created by: ${box.createdBy}`, 20, 60);
+            doc.text(`Created: ${new Date(box.createdAt).toLocaleDateString()}`, 20, 67);
+            doc.text(`Departments: ${box.departments.length}`, 20, 74);
+            
+            // Calculate total votes
+            let totalVotes = 0;
+            box.departments.forEach((dept, deptIndex) => {
+                box.choices[deptIndex]?.forEach((choice, choiceIndex) => {
+                    const statKey = `${currentEditIndex}-${deptIndex}-${choiceIndex}`;
+                    totalVotes += stats[statKey] || 0;
+                });
+            });
+            
+            doc.text(`Total Votes: ${totalVotes}`, 20, 81);
+            
+            // Departments Overview
+            let yPos = 95;
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Departments Overview', 20, yPos);
+            
+            yPos += 15;
+            box.departments.forEach((dept, deptIndex) => {
+                if (yPos > 250) {
+                    doc.addPage();
+                    yPos = 30;
+                }
+                
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text(`${deptIndex + 1}. ${dept}`, 30, yPos);
+                
+                // Department Heads
+                const heads = box.departmentHeads?.[deptIndex] || [];
+                if (heads.length > 0) {
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`Department Heads (${heads.length}):`, 35, yPos + 7);
+                    
+                    heads.forEach((head, headIndex) => {
+                        doc.text(`  • ${head.name} (Passcode: ${head.passcode})`, 40, yPos + 14 + (headIndex * 7));
+                    });
+                    yPos += 14 + (heads.length * 7);
+                } else {
+                    yPos += 10;
+                }
+                
+                // Voting Statistics
+                let deptVotes = 0;
+                let choicesText = '';
+                
+                box.choices[deptIndex]?.forEach((choice, choiceIndex) => {
+                    const statKey = `${currentEditIndex}-${deptIndex}-${choiceIndex}`;
+                    const votes = stats[statKey] || 0;
+                    deptVotes += votes;
+                    choicesText += `${choice}: ${votes} votes\n`;
+                });
+                
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text(`Total Votes: ${deptVotes}`, 35, yPos);
+                
+                if (deptVotes > 0) {
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'normal');
+                    const lines = choicesText.split('\n');
+                    lines.forEach((line, lineIndex) => {
+                        if (line.trim()) {
+                            doc.text(line, 40, yPos + 7 + (lineIndex * 6));
+                        }
+                    });
+                    yPos += 10 + (lines.length * 6);
+                } else {
+                    yPos += 15;
+                }
+                
+                // Load department feedback data
+                const deptData = loadDepartmentData(currentEditIndex, deptIndex);
+                if (deptData.length > 0) {
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('Recent Feedback:', 35, yPos);
+                    
+                    // Show only last 3 feedback items
+                    const recentFeedback = deptData.slice(-3).reverse();
+                    recentFeedback.forEach((feedback, fbIndex) => {
+                        doc.setFont('helvetica', 'normal');
+                        const text = `${new Date(feedback.timestamp).toLocaleDateString()}: ${feedback.choice} - ${feedback.voteCount} votes`;
+                        if (text.length > 50) {
+                            doc.text(text.substring(0, 50) + '...', 40, yPos + 7 + (fbIndex * 6));
+                        } else {
+                            doc.text(text, 40, yPos + 7 + (fbIndex * 6));
+                        }
+                    });
+                    yPos += 10 + (recentFeedback.length * 6);
+                }
+                
+                yPos += 15;
+            });
+            
+            // Summary Statistics
+            doc.addPage();
+            yPos = 30;
+            
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Summary Statistics', 20, yPos);
+            
+            yPos += 15;
+            
+            // Total votes per department chart
+            box.departments.forEach((dept, deptIndex) => {
+                if (yPos > 250) return;
+                
+                let deptVotes = 0;
+                box.choices[deptIndex]?.forEach((choice, choiceIndex) => {
+                    const statKey = `${currentEditIndex}-${deptIndex}-${choiceIndex}`;
+                    deptVotes += stats[statKey] || 0;
+                });
+                
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`${dept}:`, 30, yPos);
+                
+                // Create a simple bar (text representation)
+                const barLength = Math.min(50, (deptVotes / Math.max(1, totalVotes)) * 100);
+                doc.setFillColor(74, 111, 255);
+                doc.rect(80, yPos - 4, barLength, 6, 'F');
+                
+                doc.text(`${deptVotes} votes (${totalVotes > 0 ? ((deptVotes / totalVotes) * 100).toFixed(1) : 0}%)`, 140, yPos);
+                
+                yPos += 12;
+            });
+            
+            // Save the PDF
+            const fileName = `SuggestionBox_${box.name.replace(/[^a-zA-Z0-9]/g, '_')}_Report_${new Date().getTime()}.pdf`;
+            doc.save(fileName);
+            
+            showToast('PDF report generated successfully!', 'success');
+        }
+
+        // Download PDF for a specific box (from grid)
+        function downloadBoxPDF(index) {
+            currentEditIndex = index;
+            generatePDFReport();
+        }
+
+        // Delete box
+        function deleteBox(index) {
+            if (!confirm('Are you sure you want to delete this suggestion box? All associated votes and department data will be permanently deleted.')) {
+                return;
+            }
+            
+            // Delete associated statistics
+            const stats = loadStatistics();
+            Object.keys(stats).forEach(key => {
+                if (key.startsWith(`${index}-`)) {
+                    delete stats[key];
+                }
+            });
+            saveStatistics(stats);
+            
+            // Delete department data
+            const box = suggestionBoxes[index];
+            box.departments.forEach((dept, deptIndex) => {
+                const key = `deptData_${index}_${deptIndex}`;
+                localStorage.removeItem(key);
+            });
+            
+            // Delete the box
+            suggestionBoxes.splice(index, 1);
+            saveSuggestionBoxes();
+            
+            showToast('Suggestion box deleted successfully!', 'success');
+            renderBoxes();
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('currentUser');
+                sessionStorage.clear();
+                showToast('Logged out successfully', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            }
+        }
+
+        // Navigation functions
+        function navigateToDashboard() { 
+            window.location.href = 'Admindashboard.html'; 
+        }
+        
+        function navigateToSuggestionBox() { 
+            window.location.href = 'suggestionboxe.html'; 
+        }
+        
+        function navigateToRatingFeedback() { 
+            window.location.href = 'ratingandfeedback.html'; 
+        }
+        
+        function navigateToLearningHub() { 
+            window.location.href = 'adminLH.html'; 
+        }
+        
+        function navigateToSettings() { 
+            window.location.href = 'settingA.html'; 
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Escape to close modal
+            if (e.key === 'Escape' && document.getElementById('boxModal').classList.contains('active')) {
+                closeModal();
+            }
+            
+            // Ctrl/Cmd + N for new box
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                openCreateModal();
+            }
+        });
+
+        // Auto-refresh data every 30 seconds
+        setInterval(() => {
+            loadSuggestionBoxes();
+        }, 30000);
+    </script>
+</body>
+</html>
