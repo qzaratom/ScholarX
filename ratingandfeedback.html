@@ -1,0 +1,2254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rating & Feedback - ScholarX Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #4A6FFF;
+            --primary-dark: #3A5BDF;
+            --secondary: #1A1F36;
+            --accent: #00C9B7;
+            --light: #F8FAFC;
+            --gray-light: #E2E8F0;
+            --gray: #94A3B8;
+            --gray-dark: #64748B;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --sidebar-width: 260px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #F8FAFC;
+            color: #334155;
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--secondary) 0%, #0F172A 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .app-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .admin-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray-light);
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 24px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: var(--transition);
+            margin: 4px 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: rgba(74, 111, 255, 0.15);
+            color: white;
+            border-left: 4px solid var(--primary);
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .profile-pic {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+        }
+
+        .profile-info h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .profile-info p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .logout-btn {
+            width: 100%;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 30px;
+            transition: var(--transition);
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .page-title h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .page-title p {
+            color: var(--gray-dark);
+            font-size: 16px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 16px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(74, 111, 255, 0.25);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(74, 111, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--secondary);
+            border: 1px solid var(--gray-light);
+        }
+
+        .btn-secondary:hover {
+            background: var(--light);
+            border-color: var(--gray);
+        }
+
+        /* Stats Cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+        }
+
+        .stat-icon.system {
+            background: linear-gradient(135deg, var(--primary) 0%, #6C8BFF 100%);
+        }
+
+        .stat-icon.student {
+            background: linear-gradient(135deg, var(--accent) 0%, #2CE0D0 100%);
+        }
+
+        .stat-icon.instructor {
+            background: linear-gradient(135deg, var(--success) 0%, #22C55E 100%);
+        }
+
+        .stat-icon.session {
+            background: linear-gradient(135deg, var(--warning) 0%, #FBBF24 100%);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--gray-dark);
+            font-weight: 500;
+        }
+
+        /* Manage Systems Section */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .section-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .manage-section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-top: 10px;
+        }
+
+        .systems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .system-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-light);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .system-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .system-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .system-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .system-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 4px;
+        }
+
+        .system-course {
+            font-size: 14px;
+            color: var(--gray-dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .system-badge {
+            background: rgba(74, 111, 255, 0.1);
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .system-details {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .system-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 6px;
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .btn-view {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-export {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-edit {
+            background: rgba(74, 111, 255, 0.1);
+            color: var(--primary);
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            grid-column: 1 / -1;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            color: var(--gray-light);
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--gray-dark);
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            max-width: 400px;
+            margin: 0 auto 24px;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            padding: 24px 30px;
+            border-bottom: 1px solid var(--gray-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .modal-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--gray);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-modal:hover {
+            color: var(--danger);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        /* System Details Modal */
+        .system-details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--gray-light);
+        }
+
+        .system-info h3 {
+            font-size: 28px;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+
+        .system-info .course-name {
+            font-size: 18px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .overall-rating {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-radius: 15px;
+            min-width: 150px;
+        }
+
+        .rating-value {
+            font-size: 42px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .rating-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .sessions-grid {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .session-card {
+            background: white;
+            border: 2px solid var(--gray-light);
+            border-radius: 10px;
+            padding: 20px;
+            transition: var(--transition);
+        }
+
+        .session-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .session-title h4 {
+            font-size: 18px;
+            color: var(--secondary);
+        }
+
+        .session-rating {
+            background: var(--light);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .feedback-list {
+            background: var(--light);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .feedback-item {
+            padding: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .feedback-item:last-child {
+            border-bottom: none;
+        }
+
+        .charts-container {
+            margin-top: 30px;
+        }
+
+        .chart-box {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid var(--gray-light);
+            margin-bottom: 20px;
+        }
+
+        .chart-box h4 {
+            margin-bottom: 20px;
+            color: var(--secondary);
+            font-size: 18px;
+        }
+
+        /* Create System Modal */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 111, 255, 0.1);
+        }
+
+        .dynamic-section {
+            background: var(--light);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .dynamic-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .dynamic-inputs {
+            display: grid;
+            gap: 15px;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid var(--gray-light);
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--secondary);
+            color: white;
+            padding: 16px 24px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 3000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .systems-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .menu-toggle {
+                display: block;
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1001;
+                background: white;
+                border: none;
+                width: 44px;
+                height: 44px;
+                border-radius: var(--radius-sm);
+                box-shadow: var(--shadow);
+                font-size: 20px;
+                color: var(--secondary);
+                cursor: pointer;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .systems-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .system-details {
+                flex-wrap: wrap;
+            }
+            
+            .input-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .system-details-header {
+                flex-direction: column;
+                gap: 20px;
+                align-items: flex-start;
+            }
+            
+            .system-actions {
+                flex-direction: column;
+            }
+            
+            .btn-sm {
+                width: 100%;
+            }
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="logo.png" alt="ScholarX Logo" class="app-logo">
+            <div>
+                <div class="app-name">ScholarX</div>
+                <div class="admin-badge">Institutional Admin</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="Admindashboard.html" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="suggestionboxe.html" class="nav-item">
+                <i class="fas fa-lightbulb"></i>
+                <span>Suggestion Box</span>
+            </a>
+            <a href="ratingandfeedback.html" class="nav-item active">
+                <i class="fas fa-star"></i>
+                <span>Rating & Feedback</span>
+            </a>
+            <a href="adminLH.html" class="nav-item">
+                <i class="fas fa-book-open"></i>
+                <span>Learning HUB</span>
+            </a>
+            <a href="settingA.html" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <img id="profilePicture" src="default-avatar.png" alt="Profile" class="profile-pic">
+                <div class="profile-info">
+                    <h4 id="adminName">Loading...</h4>
+                    <p id="adminRole">Administrator</p>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Rating & Feedback Systems</h1>
+                <p>Create, manage and analyze student feedback for course sessions</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="exportAllData()">
+                    <i class="fas fa-file-export"></i>
+                    <span>Export All Data</span>
+                </button>
+                <button class="btn btn-primary" onclick="openCreateModal()">
+                    <i class="fas fa-plus"></i>
+                    <span>New System</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-container" id="statsContainer">
+            <!-- Stats populated by JavaScript -->
+        </div>
+
+        <!-- Systems Section -->
+        <div class="manage-section">
+            <div class="section-header">
+                <div>
+                    <h2>Manage Systems</h2>
+                    <p>View and manage all your rating & feedback systems</p>
+                </div>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search systems..." onkeyup="filterSystems()">
+                </div>
+            </div>
+            
+            <div class="systems-grid" id="systemsGrid">
+                <!-- Systems populated by JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Create/Edit System Modal -->
+    <div id="systemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Create New Rating System</h2>
+                <button class="close-modal" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="systemForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">System Name *</label>
+                            <input type="text" id="systemName" class="form-control" required 
+                                   placeholder="e.g., CS101 Fall 2023 Feedback System">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Course Name *</label>
+                            <input type="text" id="courseName" class="form-control" required 
+                                   placeholder="e.g., Introduction to Computer Science">
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label class="form-label">Number of Student Participants *</label>
+                            <input type="number" id="numStudents" class="form-control" min="1" 
+                                   placeholder="e.g., 45" onchange="generateStudentInputs()">
+                        </div>
+                        
+                        <div id="studentInputsContainer" class="dynamic-section" style="display: none;">
+                            <div class="dynamic-header">
+                                <label class="form-label">Student Registration Numbers</label>
+                                <span class="system-badge" id="studentCount">0 students</span>
+                            </div>
+                            <div class="dynamic-inputs" id="studentInputs">
+                                <!-- Generated inputs -->
+                            </div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label class="form-label">Number of Instructor Participants *</label>
+                            <input type="number" id="numInstructors" class="form-control" min="1" 
+                                   placeholder="e.g., 3" onchange="generateInstructorInputs()">
+                        </div>
+                        
+                        <div id="instructorInputsContainer" class="dynamic-section" style="display: none;">
+                            <div class="dynamic-header">
+                                <label class="form-label">Instructor Details</label>
+                                <span class="system-badge" id="instructorCount">0 instructors</span>
+                            </div>
+                            <div class="dynamic-inputs" id="instructorInputs">
+                                <!-- Generated inputs -->
+                            </div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label class="form-label">Number of Sessions *</label>
+                            <input type="number" id="numSessions" class="form-control" min="1" 
+                                   placeholder="e.g., 12" onchange="generateSessionInputs()">
+                        </div>
+                        
+                        <div id="sessionInputsContainer" class="dynamic-section" style="display: none;">
+                            <div class="dynamic-header">
+                                <label class="form-label">Session Names</label>
+                                <span class="system-badge" id="sessionCount">0 sessions</span>
+                            </div>
+                            <div class="dynamic-inputs" id="sessionInputs">
+                                <!-- Generated inputs -->
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveSystem()">Save System</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Details Modal -->
+    <div id="systemDetailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="detailsModalTitle">System Details</h2>
+                <button class="close-modal" onclick="closeDetailsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="system-details-header">
+                    <div class="system-info">
+                        <h3 id="detailsSystemName">System Name</h3>
+                        <p class="course-name" id="detailsCourseName">Course Name</p>
+                        <div style="margin-top: 15px; display: flex; gap: 20px; font-size: 14px;">
+                            <span><i class="fas fa-users"></i> <span id="detailsStudentCount">0</span> Students</span>
+                            <span><i class="fas fa-chalkboard-teacher"></i> <span id="detailsInstructorCount">0</span> Instructors</span>
+                            <span><i class="fas fa-calendar-alt"></i> <span id="detailsSessionCount">0</span> Sessions</span>
+                        </div>
+                    </div>
+                    <div class="overall-rating">
+                        <div class="rating-value" id="overallRating">0.0</div>
+                        <div class="rating-label">Overall Rating</div>
+                    </div>
+                </div>
+
+                <!-- Instructors Section -->
+                <div class="chart-box">
+                    <h4>Instructors Performance</h4>
+                    <canvas id="instructorsChart"></canvas>
+                </div>
+
+                <!-- Sessions Grid -->
+                <div class="sessions-grid" id="sessionsList">
+                    <!-- Sessions populated by JavaScript -->
+                </div>
+
+                <!-- Overall Graph -->
+                <div class="chart-box">
+                    <h4>Session Ratings Overview</h4>
+                    <canvas id="sessionsChart"></canvas>
+                </div>
+
+                <!-- Feedback Summary -->
+                <div class="chart-box">
+                    <h4>Feedback Summary</h4>
+                    <div id="feedbackSummary">
+                        <!-- Feedback summary will be populated -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDetailsModal()">Close</button>
+                <button class="btn btn-primary" onclick="generateSystemReport()">
+                    <i class="fas fa-download"></i>
+                    Download Full Report (PDF)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Operation completed successfully!</span>
+    </div>
+
+    <script>
+        // Global variables
+        let ratingSystems = [];
+        let currentEditIndex = null;
+        let currentViewIndex = null;
+        let currentUser = null;
+        let instructorsChart = null;
+        let sessionsChart = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load user data from login
+            loadUserData();
+            
+            // Load rating systems
+            const stored = JSON.parse(localStorage.getItem('ratingSystems') || '[]');
+            ratingSystems = stored;
+            
+            // Generate sample data if empty (for demo)
+            if (ratingSystems.length === 0) {
+                generateSampleData();
+            }
+            
+            // Initialize UI
+            renderStats();
+            renderSystems();
+            
+            // Setup mobile menu toggle
+            document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                const sidebar = document.getElementById('sidebar');
+                const menuToggle = document.getElementById('menuToggle');
+                
+                if (window.innerWidth <= 768 && 
+                    !sidebar.contains(event.target) && 
+                    !menuToggle.contains(event.target) && 
+                    sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                }
+            });
+            
+            // Setup search functionality
+            document.getElementById('searchInput').addEventListener('input', filterSystems);
+        });
+
+        // Load user data from login session
+        function loadUserData() {
+            // Try to get from localStorage (from login page)
+            const userData = JSON.parse(localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser') || 'null');
+            
+            if (userData) {
+                currentUser = userData;
+                document.getElementById('adminName').textContent = userData.name || 'Admin User';
+                document.getElementById('adminRole').textContent = userData.role || 'Administrator';
+                
+                // Set profile picture if available
+                if (userData.profilePic) {
+                    document.getElementById('profilePicture').src = userData.profilePic;
+                }
+            } else {
+                // Default admin if no login data
+                document.getElementById('adminName').textContent = 'Administrator';
+            }
+        }
+
+        // Generate sample data for demo
+        function generateSampleData() {
+            const sampleSystem = {
+                systemName: "CS101 Introduction to Programming",
+                courseName: "Computer Science 101",
+                students: ["STU001", "STU002", "STU003", "STU004", "STU005"],
+                instructors: [
+                    { name: "Dr. Sarah Johnson", code: "INS001" },
+                    { name: "Prof. Michael Chen", code: "INS002" }
+                ],
+                sessions: [
+                    "Introduction to Python",
+                    "Data Types and Variables",
+                    "Control Structures",
+                    "Functions and Modules",
+                    "Object-Oriented Programming"
+                ],
+                ratings: {
+                    "Introduction to Python": {
+                        instructorRatings: { "INS001": 4.5, "INS002": 4.2 },
+                        studentFeedback: [
+                            "Great introduction to the course",
+                            "Clear explanations, easy to follow",
+                            "Would like more examples"
+                        ],
+                        averageRating: 4.35
+                    },
+                    "Data Types and Variables": {
+                        instructorRatings: { "INS001": 4.7, "INS002": 4.4 },
+                        studentFeedback: [
+                            "Excellent session on data types",
+                            "Good practical examples",
+                            "Helpful exercises"
+                        ],
+                        averageRating: 4.55
+                    },
+                    "Control Structures": {
+                        instructorRatings: { "INS001": 4.3, "INS002": 4.6 },
+                        studentFeedback: [
+                            "Complex topic well explained",
+                            "Need more practice problems",
+                            "Good pace for learning"
+                        ],
+                        averageRating: 4.45
+                    }
+                },
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            ratingSystems.push(sampleSystem);
+            localStorage.setItem('ratingSystems', JSON.stringify(ratingSystems));
+        }
+
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Navigation functions
+        function navigateToAdminDashboard() { 
+            window.location.href = 'Admindashboard.html'; 
+        }
+        
+        function navigateToSuggestionBox() { 
+            window.location.href = 'suggestionboxe.html'; 
+        }
+        
+        function navigateToRatingFeedback() { 
+            window.location.href = 'ratingandfeedback.html'; 
+        }
+        
+        function navigateToLearningHub() { 
+            window.location.href = 'adminLH.html'; 
+        }
+        
+        function navigateToSettings() { 
+            window.location.href = 'settingA.html'; 
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('currentUser');
+                sessionStorage.clear();
+                showToast('Logged out successfully', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'loginAdmin.html';
+                }, 1500);
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            toast.className = 'toast' + (type === 'error' ? ' error' : '');
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Render statistics
+        function renderStats() {
+            const statsContainer = document.getElementById('statsContainer');
+            const totalStudents = ratingSystems.reduce((sum, system) => sum + system.students.length, 0);
+            const totalInstructors = ratingSystems.reduce((sum, system) => sum + system.instructors.length, 0);
+            const totalSessions = ratingSystems.reduce((sum, system) => sum + system.sessions.length, 0);
+            const avgRating = calculateAverageRating();
+            
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value">${ratingSystems.length}</div>
+                            <div class="stat-label">Active Systems</div>
+                        </div>
+                        <div class="stat-icon system">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value">${totalStudents}</div>
+                            <div class="stat-label">Total Students</div>
+                        </div>
+                        <div class="stat-icon student">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value">${totalInstructors}</div>
+                            <div class="stat-label">Total Instructors</div>
+                        </div>
+                        <div class="stat-icon instructor">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value">${avgRating.toFixed(1)}</div>
+                            <div class="stat-label">Average Rating</div>
+                        </div>
+                        <div class="stat-icon session">
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Calculate average rating across all systems
+        function calculateAverageRating() {
+            if (ratingSystems.length === 0) return 0;
+            
+            let total = 0;
+            let count = 0;
+            
+            ratingSystems.forEach(system => {
+                if (system.ratings) {
+                    Object.values(system.ratings).forEach(session => {
+                        total += session.averageRating || 0;
+                        count++;
+                    });
+                }
+            });
+            
+            return count > 0 ? total / count : 0;
+        }
+
+        // Render systems grid
+        function renderSystems() {
+            const container = document.getElementById('systemsGrid');
+            
+            if (ratingSystems.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h3>No Rating Systems Created</h3>
+                        <p>Create your first rating system to start collecting feedback from students and instructors.</p>
+                        <button class="btn btn-primary" onclick="openCreateModal()" style="margin-top: 20px;">
+                            <i class="fas fa-plus"></i>
+                            <span>Create New System</span>
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            ratingSystems.forEach((system, index) => {
+                const avgRating = calculateSystemRating(system);
+                const card = document.createElement('div');
+                card.className = 'system-card';
+                card.innerHTML = `
+                    <div class="system-header">
+                        <div>
+                            <h3>${system.systemName}</h3>
+                            <div class="system-course">
+                                <i class="fas fa-book-open"></i>
+                                <span>${system.courseName}</span>
+                            </div>
+                        </div>
+                        <div class="system-badge">${avgRating.toFixed(1)} ★</div>
+                    </div>
+                    <div class="system-details">
+                        <div class="detail-item">
+                            <div class="detail-value">${system.students.length}</div>
+                            <div class="detail-label">Students</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-value">${system.instructors.length}</div>
+                            <div class="detail-label">Instructors</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-value">${system.sessions.length}</div>
+                            <div class="detail-label">Sessions</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-value">${new Date(system.createdAt).toLocaleDateString()}</div>
+                            <div class="detail-label">Created</div>
+                        </div>
+                    </div>
+                    <div class="system-actions">
+                        <button class="btn btn-sm btn-view" onclick="viewSystemDetails(${index})">
+                            <i class="fas fa-chart-bar"></i>
+                            View Details
+                        </button>
+                        <button class="btn btn-sm btn-export" onclick="exportSystemReport(${index})">
+                            <i class="fas fa-download"></i>
+                            Export PDF
+                        </button>
+                        <button class="btn btn-sm btn-edit" onclick="editSystem(${index})">
+                            <i class="fas fa-edit"></i>
+                            Edit
+                        </button>
+                        <button class="btn btn-sm btn-delete" onclick="deleteSystem(${index})">
+                            <i class="fas fa-trash"></i>
+                            Delete
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Calculate system rating
+        function calculateSystemRating(system) {
+            if (!system.ratings) return 0;
+            
+            let total = 0;
+            let count = 0;
+            
+            Object.values(system.ratings).forEach(session => {
+                total += session.averageRating || 0;
+                count++;
+            });
+            
+            return count > 0 ? total / count : 0;
+        }
+
+        // Filter systems by search
+        function filterSystems() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const systems = document.querySelectorAll('.system-card');
+            
+            systems.forEach(card => {
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                const course = card.querySelector('.system-course span').textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || course.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Delete system function
+        function deleteSystem(index) {
+            if (confirm('Are you sure you want to delete this rating system? This action cannot be undone.')) {
+                // Remove from array
+                ratingSystems.splice(index, 1);
+                
+                // Save to localStorage
+                localStorage.setItem('ratingSystems', JSON.stringify(ratingSystems));
+                
+                // Re-render UI
+                renderStats();
+                renderSystems();
+                
+                showToast('System deleted successfully!', 'success');
+            }
+        }
+
+        // Modal functions
+        function openCreateModal() {
+            currentEditIndex = null;
+            document.getElementById('systemModal').classList.add('active');
+            document.getElementById('modalTitle').textContent = 'Create New Rating System';
+            document.getElementById('systemForm').reset();
+            document.getElementById('studentInputsContainer').style.display = 'none';
+            document.getElementById('instructorInputsContainer').style.display = 'none';
+            document.getElementById('sessionInputsContainer').style.display = 'none';
+        }
+
+        function closeModal() {
+            document.getElementById('systemModal').classList.remove('active');
+            currentEditIndex = null;
+        }
+
+        // Generate dynamic inputs
+        function generateStudentInputs() {
+            const num = parseInt(document.getElementById('numStudents').value) || 0;
+            const container = document.getElementById('studentInputs');
+            const wrapper = document.getElementById('studentInputsContainer');
+            const countElement = document.getElementById('studentCount');
+            
+            container.innerHTML = '';
+            if (num > 0) {
+                wrapper.style.display = 'block';
+                countElement.textContent = `${num} student${num !== 1 ? 's' : ''}`;
+                
+                for (let i = 0; i < num; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'input-row';
+                    div.innerHTML = `
+                        <input type="text" class="form-control" id="student${i}" 
+                               placeholder="Student ${i + 1} Registration Number" required>
+                    `;
+                    container.appendChild(div);
+                }
+            } else {
+                wrapper.style.display = 'none';
+            }
+        }
+
+        function generateInstructorInputs() {
+            const num = parseInt(document.getElementById('numInstructors').value) || 0;
+            const container = document.getElementById('instructorInputs');
+            const wrapper = document.getElementById('instructorInputsContainer');
+            const countElement = document.getElementById('instructorCount');
+            
+            container.innerHTML = '';
+            if (num > 0) {
+                wrapper.style.display = 'block';
+                countElement.textContent = `${num} instructor${num !== 1 ? 's' : ''}`;
+                
+                for (let i = 0; i < num; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'input-group';
+                    div.innerHTML = `
+                        <input type="text" class="form-control" id="instructorName${i}" 
+                               placeholder="Instructor ${i + 1} Name" required>
+                        <input type="text" class="form-control" id="instructorCode${i}" 
+                               placeholder="Instructor ${i + 1} Code" required>
+                    `;
+                    container.appendChild(div);
+                }
+            } else {
+                wrapper.style.display = 'none';
+            }
+        }
+
+        function generateSessionInputs() {
+            const num = parseInt(document.getElementById('numSessions').value) || 0;
+            const container = document.getElementById('sessionInputs');
+            const wrapper = document.getElementById('sessionInputsContainer');
+            const countElement = document.getElementById('sessionCount');
+            
+            container.innerHTML = '';
+            if (num > 0) {
+                wrapper.style.display = 'block';
+                countElement.textContent = `${num} session${num !== 1 ? 's' : ''}`;
+                
+                for (let i = 0; i < num; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'input-row';
+                    div.innerHTML = `
+                        <input type="text" class="form-control" id="session${i}" 
+                               placeholder="Session ${i + 1} Name" required>
+                    `;
+                    container.appendChild(div);
+                }
+            } else {
+                wrapper.style.display = 'none';
+            }
+        }
+
+        // Save system
+        function saveSystem() {
+            const systemName = document.getElementById('systemName').value.trim();
+            const courseName = document.getElementById('courseName').value.trim();
+            const numStudents = parseInt(document.getElementById('numStudents').value) || 0;
+            const numInstructors = parseInt(document.getElementById('numInstructors').value) || 0;
+            const numSessions = parseInt(document.getElementById('numSessions').value) || 0;
+
+            // Validation
+            if (!systemName || !courseName || numStudents <= 0 || numInstructors <= 0 || numSessions <= 0) {
+                showToast('Please fill in all required fields with valid values', 'error');
+                return;
+            }
+
+            // Collect student registration numbers
+            const students = [];
+            for (let i = 0; i < numStudents; i++) {
+                const value = document.getElementById(`student${i}`).value.trim();
+                if (!value) {
+                    showToast(`Please fill in student registration number #${i + 1}`, 'error');
+                    return;
+                }
+                students.push(value);
+            }
+
+            // Collect instructor names and codes
+            const instructors = [];
+            for (let i = 0; i < numInstructors; i++) {
+                const name = document.getElementById(`instructorName${i}`).value.trim();
+                const code = document.getElementById(`instructorCode${i}`).value.trim();
+                if (!name || !code) {
+                    showToast(`Please fill in all details for instructor #${i + 1}`, 'error');
+                    return;
+                }
+                instructors.push({ name, code });
+            }
+
+            // Collect session names
+            const sessions = [];
+            for (let i = 0; i < numSessions; i++) {
+                const value = document.getElementById(`session${i}`).value.trim();
+                if (!value) {
+                    showToast(`Please fill in session name #${i + 1}`, 'error');
+                    return;
+                }
+                sessions.push(value);
+            }
+
+            // Create system object
+            const system = {
+                systemName,
+                courseName,
+                students,
+                instructors,
+                sessions,
+                ratings: {},
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            // Initialize ratings for each session
+            sessions.forEach(session => {
+                system.ratings[session] = {
+                    instructorRatings: {},
+                    studentFeedback: [],
+                    averageRating: 0
+                };
+                
+                // Initialize instructor ratings
+                instructors.forEach(instructor => {
+                    system.ratings[session].instructorRatings[instructor.code] = 0;
+                });
+            });
+
+            // Add or update array
+            if (currentEditIndex !== null) {
+                ratingSystems[currentEditIndex] = system;
+                showToast('System updated successfully!', 'success');
+            } else {
+                ratingSystems.push(system);
+                showToast('System created successfully!', 'success');
+            }
+            
+            // Save to storage
+            localStorage.setItem('ratingSystems', JSON.stringify(ratingSystems));
+
+            // Close modal and render
+            closeModal();
+            renderStats();
+            renderSystems();
+        }
+
+        // Edit system
+        function editSystem(index) {
+            currentEditIndex = index;
+            const system = ratingSystems[index];
+            
+            document.getElementById('modalTitle').textContent = 'Edit Rating System';
+            document.getElementById('systemName').value = system.systemName;
+            document.getElementById('courseName').value = system.courseName;
+            
+            // Set student inputs
+            document.getElementById('numStudents').value = system.students.length;
+            generateStudentInputs();
+            system.students.forEach((student, i) => {
+                document.getElementById(`student${i}`).value = student;
+            });
+
+            // Set instructor inputs
+            document.getElementById('numInstructors').value = system.instructors.length;
+            generateInstructorInputs();
+            system.instructors.forEach((instructor, i) => {
+                document.getElementById(`instructorName${i}`).value = instructor.name;
+                document.getElementById(`instructorCode${i}`).value = instructor.code;
+            });
+
+            // Set session inputs
+            document.getElementById('numSessions').value = system.sessions.length;
+            generateSessionInputs();
+            system.sessions.forEach((session, i) => {
+                document.getElementById(`session${i}`).value = session;
+            });
+
+            document.getElementById('systemModal').classList.add('active');
+        }
+
+        // View system details
+        function viewSystemDetails(index) {
+            currentViewIndex = index;
+            const system = ratingSystems[index];
+            
+            // Update modal title and basic info
+            document.getElementById('detailsModalTitle').textContent = system.systemName;
+            document.getElementById('detailsSystemName').textContent = system.systemName;
+            document.getElementById('detailsCourseName').textContent = system.courseName;
+            document.getElementById('detailsStudentCount').textContent = system.students.length;
+            document.getElementById('detailsInstructorCount').textContent = system.instructors.length;
+            document.getElementById('detailsSessionCount').textContent = system.sessions.length;
+            document.getElementById('overallRating').textContent = calculateSystemRating(system).toFixed(1);
+            
+            // Render sessions
+            renderSessionsList(system);
+            
+            // Render charts
+            renderCharts(system);
+            
+            // Show modal
+            document.getElementById('systemDetailsModal').classList.add('active');
+        }
+
+        // Close details modal
+        function closeDetailsModal() {
+            document.getElementById('systemDetailsModal').classList.remove('active');
+            currentViewIndex = null;
+            
+            // Destroy charts
+            if (instructorsChart) {
+                instructorsChart.destroy();
+                instructorsChart = null;
+            }
+            
+            if (sessionsChart) {
+                sessionsChart.destroy();
+                sessionsChart = null;
+            }
+        }
+
+        // Render sessions list
+        function renderSessionsList(system) {
+            const container = document.getElementById('sessionsList');
+            container.innerHTML = '';
+            
+            system.sessions.forEach((session, index) => {
+                const sessionData = system.ratings?.[session] || {
+                    instructorRatings: {},
+                    studentFeedback: [],
+                    averageRating: 0
+                };
+                
+                const avgRating = sessionData.averageRating || 0;
+                const feedback = sessionData.studentFeedback || [];
+                
+                const sessionCard = document.createElement('div');
+                sessionCard.className = 'session-card';
+                sessionCard.innerHTML = `
+                    <div class="session-header">
+                        <div class="session-title">
+                            <h4>Session ${index + 1}: ${session}</h4>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div class="session-rating">
+                                ${avgRating.toFixed(1)} ★
+                            </div>
+                            <button class="btn btn-delete" onclick="deleteSessionRating(${currentViewIndex}, '${session}')" 
+                                    style="padding: 5px 10px; font-size: 12px;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 15px;">
+                        <h5 style="margin-bottom: 10px; color: var(--secondary);">Instructor Ratings:</h5>
+                        <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                            ${system.instructors.map(instructor => {
+                                const rating = sessionData.instructorRatings?.[instructor.code] || 0;
+                                return `
+                                    <div style="background: var(--light); padding: 10px 15px; border-radius: 8px; min-width: 200px;">
+                                        <div style="font-weight: 600; color: var(--primary);">${instructor.name}</div>
+                                        <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+                                            <span>Rating:</span>
+                                            <span style="font-weight: 700;">${rating.toFixed(1)}/5.0</span>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    
+                    ${feedback.length > 0 ? `
+                        <div class="feedback-list">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <h5 style="color: var(--secondary); margin: 0;">Student Feedback:</h5>
+                                <button class="btn btn-delete" onclick="deleteAllFeedback(${currentViewIndex}, '${session}')" 
+                                        style="padding: 3px 8px; font-size: 11px;">
+                                    <i class="fas fa-trash"></i> Clear All
+                                </button>
+                            </div>
+                            ${feedback.map((fb, i) => `
+                                <div class="feedback-item">
+                                    <div>
+                                        <i class="fas fa-comment" style="color: var(--primary); margin-right: 10px;"></i>
+                                        ${fb}
+                                    </div>
+                                    <button class="btn btn-delete" onclick="deleteSingleFeedback(${currentViewIndex}, '${session}', ${i})" 
+                                            style="padding: 2px 6px; font-size: 10px; margin-left: 10px;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                `;
+                
+                container.appendChild(sessionCard);
+            });
+        }
+
+        // Delete session rating
+        function deleteSessionRating(systemIndex, sessionName) {
+            if (confirm('Are you sure you want to delete all ratings and feedback for this session?')) {
+                const system = ratingSystems[systemIndex];
+                
+                if (system.ratings && system.ratings[sessionName]) {
+                    // Delete the session ratings
+                    delete system.ratings[sessionName];
+                    
+                    // Update system
+                    system.updatedAt = new Date().toISOString();
+                    
+                    // Save to localStorage
+                    localStorage.setItem('ratingSystems', JSON.stringify(ratingSystems));
+                    
+                    // Re-render if we're currently viewing this system
+                    if (currentViewIndex === systemIndex) {
+                        renderSessionsList(system);
+                        renderCharts(system);
+                        document.getElementById('overallRating').textContent = calculateSystemRating(system).toFixed(1);
+                    }
+                    
+                    showToast('Session ratings deleted successfully!', 'success');
+                }
+            }
+        }
+
+        // Delete all feedback for a session
+        function deleteAllFeedback(systemIndex, sessionName) {
+            if (confirm('Are you sure you want to delete all feedback for this session?')) {
+                const system = ratingSystems[systemIndex];
+                
+                if (system.ratings && system.ratings[sessionName]) {
+                    system.ratings[sessionName].studentFeedback = [];
+                    system.updatedAt = new Date().toISOString();
+                    
+                    localStorage.setItem('ratingSystems', JSON.stringify(ratingSystems));
+                    
+                    if (currentViewIndex === systemIndex) {
+                        renderSessionsList(system);
+                    }
+                    
+                    showToast('All feedback cleared!', 'success');
+                }
+            }
+        }
+
+        // Delete single feedback item
+        function deleteSingleFeedback(systemIndex, sessionName, feedbackIndex) {
+            const system = ratingSystems[systemIndex];
+            
+            if (system.ratings && system.ratings[sessionName]) {
+                system.ratings[sessionName].studentFeedback.splice(feedbackIndex, 1);
+                system.updatedAt = new Date().toISOString();
+                
+                localStorage.setItem('ratingSystems', JSON.stringify(ratingSystems));
+                
+                if (currentViewIndex === systemIndex) {
+                    renderSessionsList(system);
+                }
+                
+                showToast('Feedback deleted!', 'success');
+            }
+        }
+
+        // Render charts
+        function renderCharts(system) {
+            const instructorsCtx = document.getElementById('instructorsChart').getContext('2d');
+            const sessionsCtx = document.getElementById('sessionsChart').getContext('2d');
+            
+            // Prepare instructor data
+            const instructorNames = system.instructors.map(i => i.name);
+            const instructorRatings = system.instructors.map(instructor => {
+                let total = 0;
+                let count = 0;
+                
+                system.sessions.forEach(session => {
+                    const sessionData = system.ratings?.[session];
+                    if (sessionData && sessionData.instructorRatings) {
+                        const rating = sessionData.instructorRatings[instructor.code] || 0;
+                        if (rating > 0) {
+                            total += rating;
+                            count++;
+                        }
+                    }
+                });
+                
+                return count > 0 ? total / count : 0;
+            });
+            
+            // Destroy existing chart if it exists
+            if (instructorsChart) {
+                instructorsChart.destroy();
+            }
+            
+            // Create instructors chart
+            instructorsChart = new Chart(instructorsCtx, {
+                type: 'bar',
+                data: {
+                    labels: instructorNames,
+                    datasets: [{
+                        label: 'Average Rating',
+                        data: instructorRatings,
+                        backgroundColor: 'rgba(74, 111, 255, 0.8)',
+                        borderColor: 'rgb(74, 111, 255)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5,
+                            title: {
+                                display: true,
+                                text: 'Rating (out of 5)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // Prepare session data
+            const sessionNames = system.sessions;
+            const sessionRatings = system.sessions.map(session => {
+                const sessionData = system.ratings?.[session];
+                return sessionData ? (sessionData.averageRating || 0) : 0;
+            });
+            
+            // Destroy existing chart if it exists
+            if (sessionsChart) {
+                sessionsChart.destroy();
+            }
+            
+            // Create sessions chart
+            sessionsChart = new Chart(sessionsCtx, {
+                type: 'line',
+                data: {
+                    labels: sessionNames,
+                    datasets: [{
+                        label: 'Session Rating',
+                        data: sessionRatings,
+                        backgroundColor: 'rgba(74, 111, 255, 0.1)',
+                        borderColor: 'rgb(74, 111, 255)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5,
+                            title: {
+                                display: true,
+                                text: 'Rating'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Sessions'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Generate PDF report for a specific system
+        async function generateSystemReport() {
+            if (currentViewIndex === null) return;
+            
+            const system = ratingSystems[currentViewIndex];
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // Add header
+            doc.setFillColor(26, 31, 54);
+            doc.rect(0, 0, 210, 30, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(24);
+            doc.setFont('helvetica', 'bold');
+            doc.text('ScholarX', 20, 20);
+            doc.setFontSize(12);
+            doc.text('Rating & Feedback System Report', 20, 27);
+            
+            // Add footer
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(10);
+            const dateStr = new Date().toLocaleDateString();
+            doc.text(`Generated on: ${dateStr}`, 20, 280);
+            doc.text(`Page 1 of 1`, 190, 280, { align: 'right' });
+            
+            // Add system info
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text(system.systemName, 20, 50);
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Course: ${system.courseName}`, 20, 60);
+            doc.text(`Generated by: ${currentUser?.name || 'Administrator'}`, 20, 67);
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 74);
+            
+            // Add statistics
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('System Statistics', 20, 90);
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`• Total Students: ${system.students.length}`, 30, 100);
+            doc.text(`• Total Instructors: ${system.instructors.length}`, 30, 107);
+            doc.text(`• Total Sessions: ${system.sessions.length}`, 30, 114);
+            doc.text(`• Overall Rating: ${calculateSystemRating(system).toFixed(1)}/5.0`, 30, 121);
+            
+            // Add instructor performance
+            let yPos = 135;
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Instructor Performance', 20, yPos);
+            
+            yPos += 15;
+            system.instructors.forEach((instructor, idx) => {
+                if (yPos > 250) {
+                    doc.addPage();
+                    yPos = 30;
+                }
+                
+                // Calculate instructor average
+                let totalRating = 0;
+                let ratedSessions = 0;
+                
+                system.sessions.forEach(session => {
+                    const sessionData = system.ratings?.[session];
+                    if (sessionData && sessionData.instructorRatings) {
+                        const rating = sessionData.instructorRatings[instructor.code] || 0;
+                        if (rating > 0) {
+                            totalRating += rating;
+                            ratedSessions++;
+                        }
+                    }
+                });
+                
+                const avgRating = ratedSessions > 0 ? (totalRating / ratedSessions).toFixed(1) : 'N/A';
+                
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text(`${idx + 1}. ${instructor.name}`, 30, yPos);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`Average Rating: ${avgRating}/5.0 | Code: ${instructor.code}`, 30, yPos + 7);
+                
+                yPos += 20;
+            });
+            
+            // Add session ratings
+            yPos += 10;
+            if (yPos > 250) {
+                doc.addPage();
+                yPos = 30;
+            }
+            
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Session Ratings Summary', 20, yPos);
+            
+            yPos += 10;
+            system.sessions.forEach((session, idx) => {
+                if (yPos > 250) {
+                    doc.addPage();
+                    yPos = 30;
+                }
+                
+                const sessionData = system.ratings?.[session];
+                const avgRating = sessionData ? sessionData.averageRating.toFixed(1) : 'N/A';
+                
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`${idx + 1}. ${session} - Rating: ${avgRating}/5.0`, 30, yPos);
+                
+                // Add feedback snippets
+                if (sessionData && sessionData.studentFeedback && sessionData.studentFeedback.length > 0) {
+                    const feedback = sessionData.studentFeedback[0];
+                    if (feedback.length > 60) {
+                        doc.text(`   Feedback: ${feedback.substring(0, 60)}...`, 32, yPos + 6);
+                    } else {
+                        doc.text(`   Feedback: ${feedback}`, 32, yPos + 6);
+                    }
+                    yPos += 15;
+                } else {
+                    yPos += 10;
+                }
+            });
+            
+            // Save the PDF
+            const fileName = `ScholarX_Report_${system.systemName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getTime()}.pdf`;
+            doc.save(fileName);
+            
+            showToast('PDF report generated successfully!', 'success');
+        }
+
+        // Export system report (from grid button)
+        function exportSystemReport(index) {
+            currentViewIndex = index;
+            generateSystemReport();
+        }
+
+        // Export all data as CSV
+        function exportAllData() {
+            if (ratingSystems.length === 0) {
+                showToast('No data to export', 'error');
+                return;
+            }
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "System Name,Course Name,Students,Instructors,Sessions,Overall Rating,Created Date\n";
+            
+            ratingSystems.forEach(system => {
+                const row = [
+                    `"${system.systemName}"`,
+                    `"${system.courseName}"`,
+                    system.students.length,
+                    system.instructors.length,
+                    system.sessions.length,
+                    calculateSystemRating(system).toFixed(2),
+                    new Date(system.createdAt).toLocaleDateString()
+                ].join(',');
+                
+                csvContent += row + "\n";
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `ScholarX_All_Systems_${new Date().getTime()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast('All data exported successfully!', 'success');
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Escape to close modals
+            if (e.key === 'Escape') {
+                if (document.getElementById('systemModal').classList.contains('active')) {
+                    closeModal();
+                }
+                if (document.getElementById('systemDetailsModal').classList.contains('active')) {
+                    closeDetailsModal();
+                }
+            }
+            
+            // Ctrl/Cmd + N for new system
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                openCreateModal();
+            }
+            
+            // Ctrl/Cmd + E for export
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                exportAllData();
+            }
+        });
+    </script>
+</body>
+</html>

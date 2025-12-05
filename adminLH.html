@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScholarX Admin - Learning Hub Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #4A6FFF;
+            --primary-dark: #3A5BDF;
+            --secondary: #1A1F36;
+            --accent: #00C9B7;
+            --light: #F8FAFC;
+            --gray-light: #E2E8F0;
+            --gray: #94A3B8;
+            --gray-dark: #64748B;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --beginner: #6366F1;
+            --amateur: #8B5CF6;
+            --semi-pro: #EC4899;
+            --pro: #EF4444;
+            --expert: #F59E0B;
+            --legendary: #10B981;
+            --genius: #06B6D4;
+            --sidebar-width: 260px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #F8FAFC;
+            color: #334155;
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar - SAME AS ADMIN DASHBOARD */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--secondary) 0%, #0F172A 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .app-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .admin-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray-light);
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 24px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: var(--transition);
+            margin: 4px 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: rgba(74, 111, 255, 0.15);
+            color: white;
+            border-left: 4px solid var(--primary);
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .profile-pic {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+        }
+
+        .profile-info h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .profile-info p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .logout-btn {
+            width: 100%;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 30px;
+            transition: var(--transition);
+            max-width: calc(100vw - var(--sidebar-width));
+            overflow-x: hidden;
+        }
+
+        /* Header Section */
+        .hub-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-title h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .header-title p {
+            color: var(--gray-dark);
+            font-size: 16px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        /* Search Bar */
+        .search-container {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 45px 12px 16px;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 111, 255, 0.1);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* Filter & Sort Controls */
+        .controls-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-sort-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .sort-select, .filter-select {
+            padding: 10px 16px;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            min-width: 180px;
+        }
+
+        /* Stats Cards */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+
+        .icon-tutors { background: linear-gradient(135deg, var(--primary), #6C8BFF); }
+        .icon-points { background: linear-gradient(135deg, var(--accent), #2CE0D0); }
+        .icon-badges { background: linear-gradient(135deg, var(--success), #22C55E); }
+        .icon-active { background: linear-gradient(135deg, var(--warning), #FBBF24); }
+
+        .stat-info h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+
+        .stat-info p {
+            color: var(--gray-dark);
+            font-size: 14px;
+        }
+
+        /* Tutors Table */
+        .tutors-table-container {
+            background: white;
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .table-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .add-tutor-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-tutor-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .tutors-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        .tutors-table th {
+            text-align: left;
+            padding: 16px;
+            border-bottom: 2px solid var(--gray-light);
+            color: var(--gray-dark);
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .tutors-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--gray-light);
+            vertical-align: middle;
+        }
+
+        .tutor-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tutor-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--gray-light);
+        }
+
+        .default-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .tutor-info h4 {
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 4px;
+        }
+
+        .tutor-info p {
+            font-size: 13px;
+            color: var(--gray);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .badge-beginner { background: var(--beginner); }
+        .badge-amateur { background: var(--amateur); }
+        .badge-semi-pro { background: var(--semi-pro); }
+        .badge-pro { background: var(--pro); }
+        .badge-expert { background: var(--expert); }
+        .badge-legendary { background: var(--legendary); }
+        .badge-genius { background: var(--genius); }
+
+        .points-display {
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .view-btn {
+            background: rgba(74, 111, 255, 0.1);
+            color: var(--primary);
+        }
+
+        .view-btn:hover {
+            background: rgba(74, 111, 255, 0.2);
+        }
+
+        .edit-btn {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .edit-btn:hover {
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .delete-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: modalFadeIn 0.3s ease-out;
+            margin: 20px;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--gray-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--gray);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-modal:hover {
+            color: var(--danger);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid var(--gray-light);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 111, 255, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Profile Upload */
+        .profile-upload {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            overflow: hidden;
+            border: 3px solid var(--primary);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .profile-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .upload-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--light);
+            color: var(--gray);
+            font-size: 30px;
+        }
+
+        .upload-text {
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+        }
+
+        .upload-text:hover {
+            text-decoration: underline;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(74, 111, 255, 0.25);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(74, 111, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--secondary);
+            border: 1px solid var(--gray-light);
+        }
+
+        .btn-secondary:hover {
+            background: var(--light);
+            border-color: var(--gray);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #0da271;
+        }
+
+        /* Tutor Details */
+        .tutor-details {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .tutor-details-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid var(--primary);
+        }
+
+        .tutor-details-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .tutor-details-info h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+
+        .tutor-details-info p {
+            margin-bottom: 8px;
+            color: var(--gray-dark);
+        }
+
+        .tutor-details-info strong {
+            color: var(--secondary);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--secondary);
+            color: white;
+            padding: 12px 18px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 3000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: var(--transition);
+            max-width: 350px;
+            font-size: 14px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast.warning {
+            background: var(--warning);
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1001;
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            font-size: 18px;
+            color: var(--secondary);
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+                max-width: 100vw;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .hub-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .header-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+            
+            .search-container {
+                width: 100%;
+            }
+            
+            .controls-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .tutors-table {
+                min-width: 800px;
+            }
+            
+            .tutor-details {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .tutor-details-avatar {
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 15px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                max-width: 95%;
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="logo.png" alt="ScholarX Logo" class="app-logo" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22%3E%3Crect%20width=%22100%22%20height=%22100%22%20fill=%22%234A6FFF%22/%3E%3Ctext%20x=%2250%22%20y=%2260%22%20font-family=%22Arial%22%20font-size=%2240%22%20fill=%22white%22%20text-anchor=%22middle%22%3ESX%3C/text%3E%3C/svg%3E'">
+            <div>
+                <div class="app-name">ScholarX</div>
+                <div class="admin-badge">Learning Hub Admin</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="Admindashboard.html" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="suggestionboxe.html" class="nav-item">
+                <i class="fas fa-lightbulb"></i>
+                <span>Suggestion Box</span>
+            </a>
+            <a href="ratingandfeedback.html" class="nav-item">
+                <i class="fas fa-star"></i>
+                <span>Rating & Feedback</span>
+            </a>
+            <a href="adminLH.html" class="nav-item active">
+                <i class="fas fa-book-open"></i>
+                <span>Learning HUB</span>
+            </a>
+            <a href="settingA.html" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <img id="profilePicture" src="default-avatar.png" alt="Profile" class="profile-pic" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22%3E%3Ccircle%20cx=%2250%22%20cy=%2250%22%20r=%2245%22%20fill=%22%234A6FFF%22/%3E%3Ctext%20x=%2250%22%20y=%2260%22%20font-family=%22Arial%22%20font-size=%2240%22%20fill=%22white%22%20text-anchor=%22middle%22%3EA%3C/text%3E%3C/svg%3E'">
+                <div class="profile-info">
+                    <h4 id="adminName">Administrator</h4>
+                    <p id="adminRole">Super Admin</p>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <div class="hub-header">
+            <div class="header-title">
+                <h1>Learning Hub Management</h1>
+                <p>Manage tutors, track points, and monitor learning hub activities</p>
+            </div>
+            <div class="header-actions">
+                <div class="search-container">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search tutors by name or expertise...">
+                    <button class="search-btn" onclick="searchTutors()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <button class="btn btn-primary" onclick="downloadPDF()">
+                    <i class="fas fa-download"></i>
+                    Download PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="stat-icon icon-tutors">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="totalTutors">0</h3>
+                    <p>Total Tutors</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon icon-points">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="totalPoints">0</h3>
+                    <p>Total Points</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon icon-badges">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="totalBadges">0</h3>
+                    <p>Badges Awarded</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon icon-active">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="activeTutors">0</h3>
+                    <p>Active Tutors</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-container">
+            <div class="filter-sort-group">
+                <select class="sort-select" id="sortSelect" onchange="sortTutors()">
+                    <option value="name-asc">Sort by: Name (A-Z)</option>
+                    <option value="name-desc">Sort by: Name (Z-A)</option>
+                    <option value="points-desc">Sort by: Points (High to Low)</option>
+                    <option value="points-asc">Sort by: Points (Low to High)</option>
+                    <option value="badge">Sort by: Badge Level</option>
+                </select>
+                
+                <select class="filter-select" id="filterSelect" onchange="filterTutors()">
+                    <option value="all">Filter by: All Tutors</option>
+                    <option value="beginner">Beginner Only</option>
+                    <option value="amateur">Amateur Only</option>
+                    <option value="semi-pro">Semi-Pro Only</option>
+                    <option value="pro">Pro Only</option>
+                    <option value="expert">Expert Only</option>
+                    <option value="legendary">Legendary Only</option>
+                    <option value="genius">Genius Only</option>
+                    <option value="expertise">Filter by Expertise</option>
+                </select>
+            </div>
+            
+            <div id="expertiseFilter" style="display: none;">
+                <input type="text" class="form-control" id="expertiseInput" placeholder="Enter expertise (e.g., Mathematics)" oninput="filterByExpertise()" style="width: 200px;">
+            </div>
+        </div>
+
+        <!-- Tutors Table -->
+        <div class="tutors-table-container">
+            <div class="table-header">
+                <h2>Tutors List</h2>
+                <button class="add-tutor-btn" onclick="openAddTutorModal()">
+                    <i class="fas fa-plus"></i>
+                    Add New Tutor
+                </button>
+            </div>
+            
+            <table class="tutors-table" id="tutorsTable">
+                <thead>
+                    <tr>
+                        <th>Tutor</th>
+                        <th>Email</th>
+                        <th>Area of Expertise</th>
+                        <th>Badge</th>
+                        <th>Points</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tutorsTableBody">
+                    <!-- Tutors will be loaded here -->
+                </tbody>
+            </table>
+            <div id="noTutorsMessage" style="text-align: center; padding: 40px; color: var(--gray); display: none;">
+                <i class="fas fa-chalkboard-teacher" style="font-size: 48px; margin-bottom: 15px;"></i>
+                <h3 style="color: var(--secondary); margin-bottom: 10px;">No Tutors Found</h3>
+                <p>Add your first tutor to get started with the Learning Hub.</p>
+                <button class="add-tutor-btn" onclick="openAddTutorModal()" style="margin-top: 15px;">
+                    <i class="fas fa-plus"></i>
+                    Add First Tutor
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Tutor Modal -->
+    <div id="tutorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Tutor</h2>
+                <button class="close-modal" onclick="closeTutorModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="profile-upload">
+                    <div class="profile-preview" onclick="triggerProfileUpload()">
+                        <div class="upload-placeholder" id="profilePlaceholder">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <img id="profilePreview" src="" alt="Profile Preview" style="display: none;">
+                    </div>
+                    <div class="upload-text" onclick="triggerProfileUpload()">
+                        Upload Profile Picture
+                    </div>
+                    <input type="file" id="profilePictureUpload" accept="image/*" style="display: none;" onchange="previewProfilePicture(event)">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" id="tutorName" class="form-control" placeholder="Enter full name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Email Address *</label>
+                        <input type="email" id="tutorEmail" class="form-control" placeholder="tutor@scholarx.edu" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Area of Expertise *</label>
+                        <input type="text" id="tutorExpertise" class="form-control" placeholder="e.g., Mathematics, Computer Science" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Initial Points</label>
+                        <input type="number" id="tutorPoints" class="form-control" value="0" min="0">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Biography</label>
+                    <textarea id="tutorBio" class="form-control" rows="4" placeholder="Brief bio about the tutor..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeTutorModal()">
+                    Cancel
+                </button>
+                <button class="btn btn-success" id="saveTutorBtn" onclick="saveTutor()">
+                    <i class="fas fa-save"></i>
+                    Save Tutor
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Tutor Modal -->
+    <div id="viewTutorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Tutor Details</h2>
+                <button class="close-modal" onclick="closeViewTutorModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="tutor-details">
+                    <div class="tutor-details-avatar">
+                        <img id="viewTutorAvatar" src="" alt="Tutor Avatar" onerror="this.style.display='none'">
+                        <div id="viewTutorDefaultAvatar" class="default-avatar"></div>
+                    </div>
+                    <div class="tutor-details-info">
+                        <h3 id="viewTutorName"></h3>
+                        <p><strong>Email:</strong> <span id="viewTutorEmail"></span></p>
+                        <p><strong>Expertise:</strong> <span id="viewTutorExpertise"></span></p>
+                        <p><strong>Badge:</strong> <span id="viewTutorBadge"></span></p>
+                        <p><strong>Points:</strong> <span id="viewTutorPoints"></span></p>
+                        <p><strong>Status:</strong> <span id="viewTutorStatus"></span></p>
+                        <p><strong>Joined:</strong> <span id="viewTutorJoined"></span></p>
+                        <p><strong>Bio:</strong> <span id="viewTutorBio"></span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeViewTutorModal()">
+                    Close
+                </button>
+                <button class="btn btn-primary" onclick="editTutorFromView()">
+                    <i class="fas fa-edit"></i>
+                    Edit Tutor
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Operation completed successfully!</span>
+    </div>
+
+    <script>
+        // Global variables
+        let tutors = [];
+        let currentEditId = null;
+        let profilePictureData = null;
+        
+        // Badge system configuration (same as student side)
+        const badges = [
+            { name: "Beginner", minPoints: 0, maxPoints: 100, color: "beginner" },
+            { name: "Amateur", minPoints: 101, maxPoints: 500, color: "amateur" },
+            { name: "Semi-Pro", minPoints: 501, maxPoints: 1000, color: "semi-pro" },
+            { name: "Pro", minPoints: 1001, maxPoints: 2000, color: "pro" },
+            { name: "Expert", minPoints: 2001, maxPoints: 3000, color: "expert" },
+            { name: "Legendary", minPoints: 3001, maxPoints: 5000, color: "legendary" },
+            { name: "Genius", minPoints: 5001, maxPoints: 10000, color: "genius" }
+        ];
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            checkAuthentication();
+            
+            // Load user data
+            loadUserData();
+            
+            // Load tutors from localStorage
+            loadTutors();
+            
+            // Setup mobile menu toggle
+            document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                const sidebar = document.getElementById('sidebar');
+                const menuToggle = document.getElementById('menuToggle');
+                
+                if (window.innerWidth <= 768 && 
+                    !sidebar.contains(event.target) && 
+                    !menuToggle.contains(event.target) && 
+                    sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                }
+            });
+            
+            // Search input event listener
+            document.getElementById('searchInput').addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    searchTutors();
+                } else {
+                    // Real-time search
+                    searchTutors();
+                }
+            });
+            
+            // Filter select change
+            document.getElementById('filterSelect').addEventListener('change', function() {
+                if (this.value === 'expertise') {
+                    document.getElementById('expertiseFilter').style.display = 'block';
+                    filterByExpertise();
+                } else {
+                    document.getElementById('expertiseFilter').style.display = 'none';
+                    filterTutors();
+                }
+            });
+            
+            // Enter key in expertise filter
+            document.getElementById('expertiseInput')?.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    filterByExpertise();
+                }
+            });
+        });
+
+        // Check authentication
+        function checkAuthentication() {
+            const currentUser = localStorage.getItem('currentUser');
+            const isAuthenticated = sessionStorage.getItem('isAuthenticated');
+            
+            if (!currentUser || isAuthenticated !== 'true') {
+                showToast('Please login first', 'error');
+                setTimeout(() => {
+                    window.location.href = 'loginAdmin.html';
+                }, 1500);
+            }
+        }
+
+        // Load user data
+        function loadUserData() {
+            const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            
+            if (userData.name) {
+                document.getElementById('adminName').textContent = userData.name;
+            }
+            
+            if (userData.role) {
+                document.getElementById('adminRole').textContent = userData.role;
+            }
+            
+            if (userData.profilePic) {
+                document.getElementById('profilePicture').src = userData.profilePic;
+            }
+        }
+
+        // Load tutors from localStorage - FIXED: Now retrieves from tutor array
+        function loadTutors() {
+            // Get tutors from localStorage
+            const storedTutors = JSON.parse(localStorage.getItem('tutors') || '[]');
+            
+            // If no tutors exist, create some sample data
+            if (storedTutors.length === 0) {
+                tutors = createSampleTutors();
+                saveTutors();
+            } else {
+                tutors = storedTutors;
+            }
+            
+            updateStats();
+            renderTutorsTable();
+        }
+
+        // Create sample tutors for demonstration
+        function createSampleTutors() {
+            const sampleTutors = [
+                {
+                    id: 1,
+                    name: "Dr. Sarah Johnson",
+                    email: "s.johnson@scholarx.edu",
+                    expertise: "Mathematics, Calculus",
+                    bio: "PhD in Mathematics with 10+ years of teaching experience",
+                    points: 1250,
+                    badge: "expert",
+                    status: "Active",
+                    joined: "2024-01-15",
+                    avatar: ""
+                },
+                {
+                    id: 2,
+                    name: "Prof. Michael Chen",
+                    email: "m.chen@scholarx.edu",
+                    expertise: "Computer Science, AI",
+                    bio: "Software Engineer turned educator with focus on AI",
+                    points: 980,
+                    badge: "semi-pro",
+                    status: "Active",
+                    joined: "2024-02-10",
+                    avatar: ""
+                },
+                {
+                    id: 3,
+                    name: "Dr. Emily Williams",
+                    email: "e.williams@scholarx.edu",
+                    expertise: "Physics, Quantum Mechanics",
+                    bio: "Theoretical physicist passionate about teaching",
+                    points: 2100,
+                    badge: "legendary",
+                    status: "Active",
+                    joined: "2024-01-05",
+                    avatar: ""
+                },
+                {
+                    id: 4,
+                    name: "Ms. Jessica Brown",
+                    email: "j.brown@scholarx.edu",
+                    expertise: "Chemistry, Organic Chemistry",
+                    bio: "Chemistry lab specialist with industry experience",
+                    points: 750,
+                    badge: "amateur",
+                    status: "Active",
+                    joined: "2024-03-01",
+                    avatar: ""
+                },
+                {
+                    id: 5,
+                    name: "Mr. David Miller",
+                    email: "d.miller@scholarx.edu",
+                    expertise: "Biology, Genetics",
+                    bio: "Medical researcher focused on genetic education",
+                    points: 3000,
+                    badge: "genius",
+                    status: "Active",
+                    joined: "2024-01-20",
+                    avatar: ""
+                },
+                {
+                    id: 6,
+                    name: "Prof. Robert Wilson",
+                    email: "r.wilson@scholarx.edu",
+                    expertise: "Economics, Statistics",
+                    bio: "Former economic advisor turned professor",
+                    points: 450,
+                    badge: "amateur",
+                    status: "Inactive",
+                    joined: "2024-02-15",
+                    avatar: ""
+                }
+            ];
+            
+            return sampleTutors;
+        }
+
+        // Save tutors to localStorage - FIXED: Saves to tutor array
+        function saveTutors() {
+            localStorage.setItem('tutors', JSON.stringify(tutors));
+        }
+
+        // Update statistics
+        function updateStats() {
+            const totalTutors = tutors.length;
+            const totalPoints = tutors.reduce((sum, tutor) => sum + tutor.points, 0);
+            const activeTutors = tutors.filter(tutor => tutor.status === "Active").length;
+            
+            // Count unique badges
+            const uniqueBadges = new Set(tutors.map(tutor => getBadgeFromPoints(tutor.points).name));
+            const totalBadges = uniqueBadges.size;
+            
+            document.getElementById('totalTutors').textContent = totalTutors;
+            document.getElementById('totalPoints').textContent = totalPoints.toLocaleString();
+            document.getElementById('totalBadges').textContent = totalBadges;
+            document.getElementById('activeTutors').textContent = activeTutors;
+        }
+
+        // Get badge from points
+        function getBadgeFromPoints(points) {
+            for (let i = badges.length - 1; i >= 0; i--) {
+                if (points >= badges[i].minPoints) {
+                    return badges[i];
+                }
+            }
+            return badges[0];
+        }
+
+        // Render tutors table - FIXED: Now displays tutors from array
+        function renderTutorsTable(filteredTutors = null) {
+            const displayTutors = filteredTutors || tutors;
+            const tableBody = document.getElementById('tutorsTableBody');
+            const noTutorsMessage = document.getElementById('noTutorsMessage');
+            
+            if (displayTutors.length === 0) {
+                tableBody.innerHTML = '';
+                document.getElementById('tutorsTable').style.display = 'none';
+                noTutorsMessage.style.display = 'block';
+                return;
+            }
+            
+            noTutorsMessage.style.display = 'none';
+            document.getElementById('tutorsTable').style.display = 'table';
+            
+            tableBody.innerHTML = displayTutors.map(tutor => {
+                const badge = getBadgeFromPoints(tutor.points);
+                
+                return `
+                    <tr>
+                        <td>
+                            <div class="tutor-profile">
+                                ${tutor.avatar ? 
+                                    `<img src="${tutor.avatar}" alt="${tutor.name}" class="tutor-avatar">` :
+                                    `<div class="default-avatar">${tutor.name.charAt(0)}</div>`
+                                }
+                                <div class="tutor-info">
+                                    <h4>${tutor.name}</h4>
+                                    <p>ID: T${tutor.id.toString().padStart(3, '0')}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${tutor.email}</td>
+                        <td>${tutor.expertise}</td>
+                        <td>
+                            <span class="badge badge-${badge.color}">
+                                ${badge.name}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="points-display">
+                                <i class="fas fa-star"></i>
+                                ${tutor.points}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge ${tutor.status === 'Active' ? 'badge-legendary' : 'badge-pro'}">
+                                ${tutor.status}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn view-btn" onclick="viewTutor(${tutor.id})">
+                                    <i class="fas fa-eye"></i>
+                                    View
+                                </button>
+                                <button class="action-btn edit-btn" onclick="editTutor(${tutor.id})">
+                                    <i class="fas fa-edit"></i>
+                                    Edit
+                                </button>
+                                <button class="action-btn delete-btn" onclick="deleteTutor(${tutor.id})">
+                                    <i class="fas fa-trash"></i>
+                                    Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Search tutors
+        function searchTutors() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (!searchTerm) {
+                renderTutorsTable();
+                return;
+            }
+            
+            const filteredTutors = tutors.filter(tutor => 
+                tutor.name.toLowerCase().includes(searchTerm) ||
+                tutor.email.toLowerCase().includes(searchTerm) ||
+                tutor.expertise.toLowerCase().includes(searchTerm) ||
+                (tutor.bio && tutor.bio.toLowerCase().includes(searchTerm))
+            );
+            
+            renderTutorsTable(filteredTutors);
+        }
+
+        // Sort tutors
+        function sortTutors() {
+            const sortValue = document.getElementById('sortSelect').value;
+            let sortedTutors = [...tutors];
+            
+            switch(sortValue) {
+                case 'name-asc':
+                    sortedTutors.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'name-desc':
+                    sortedTutors.sort((a, b) => b.name.localeCompare(a.name));
+                    break;
+                case 'points-desc':
+                    sortedTutors.sort((a, b) => b.points - a.points);
+                    break;
+                case 'points-asc':
+                    sortedTutors.sort((a, b) => a.points - b.points);
+                    break;
+                case 'badge':
+                    sortedTutors.sort((a, b) => {
+                        const badgeA = getBadgeFromPoints(a.points);
+                        const badgeB = getBadgeFromPoints(b.points);
+                        return badgeB.minPoints - badgeA.minPoints;
+                    });
+                    break;
+            }
+            
+            renderTutorsTable(sortedTutors);
+        }
+
+        // Filter tutors
+        function filterTutors() {
+            const filterValue = document.getElementById('filterSelect').value;
+            
+            if (filterValue === 'all') {
+                renderTutorsTable();
+                return;
+            }
+            
+            const filteredTutors = tutors.filter(tutor => {
+                const badge = getBadgeFromPoints(tutor.points);
+                return badge.color === filterValue;
+            });
+            
+            renderTutorsTable(filteredTutors);
+        }
+
+        // Filter by expertise
+        function filterByExpertise() {
+            const expertiseTerm = document.getElementById('expertiseInput').value.toLowerCase();
+            
+            if (!expertiseTerm) {
+                renderTutorsTable();
+                return;
+            }
+            
+            const filteredTutors = tutors.filter(tutor => 
+                tutor.expertise.toLowerCase().includes(expertiseTerm)
+            );
+            
+            renderTutorsTable(filteredTutors);
+        }
+
+        // Open add tutor modal
+        function openAddTutorModal() {
+            currentEditId = null;
+            profilePictureData = null;
+            document.getElementById('modalTitle').textContent = 'Add New Tutor';
+            document.getElementById('saveTutorBtn').innerHTML = '<i class="fas fa-save"></i> Save Tutor';
+            
+            // Clear form
+            document.getElementById('tutorName').value = '';
+            document.getElementById('tutorEmail').value = '';
+            document.getElementById('tutorExpertise').value = '';
+            document.getElementById('tutorPoints').value = '0';
+            document.getElementById('tutorBio').value = '';
+            
+            // Reset profile picture
+            document.getElementById('profilePreview').style.display = 'none';
+            document.getElementById('profilePreview').src = '';
+            document.getElementById('profilePlaceholder').style.display = 'flex';
+            document.getElementById('profilePlaceholder').innerHTML = '<i class="fas fa-user-plus"></i>';
+            
+            document.getElementById('tutorModal').classList.add('active');
+        }
+
+        // Close tutor modal
+        function closeTutorModal() {
+            document.getElementById('tutorModal').classList.remove('active');
+        }
+
+        // Trigger profile upload
+        function triggerProfileUpload() {
+            document.getElementById('profilePictureUpload').click();
+        }
+
+        // Preview profile picture
+        function previewProfilePicture(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Validate file type
+                if (!file.type.match('image.*')) {
+                    showToast('Please select an image file (JPG, PNG, GIF)', 'error');
+                    return;
+                }
+                
+                // Validate file size (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    showToast('Image size should be less than 5MB', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('profilePreview');
+                    const placeholder = document.getElementById('profilePlaceholder');
+                    
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    
+                    // Store for saving
+                    profilePictureData = e.target.result;
+                    
+                    showToast('Profile picture selected', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Save tutor (add or edit) - FIXED: Adds to tutor array and updates list immediately
+        function saveTutor() {
+            const name = document.getElementById('tutorName').value.trim();
+            const email = document.getElementById('tutorEmail').value.trim().toLowerCase();
+            const expertise = document.getElementById('tutorExpertise').value.trim();
+            const points = parseInt(document.getElementById('tutorPoints').value) || 0;
+            const bio = document.getElementById('tutorBio').value.trim();
+            
+            // Validation
+            if (!name) {
+                showToast('Please enter tutor name', 'error');
+                return;
+            }
+            
+            if (!email) {
+                showToast('Please enter tutor email', 'error');
+                return;
+            }
+            
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showToast('Please enter a valid email address', 'error');
+                return;
+            }
+            
+            if (!expertise) {
+                showToast('Please enter area of expertise', 'error');
+                return;
+            }
+            
+            if (currentEditId) {
+                // Edit existing tutor
+                const tutorIndex = tutors.findIndex(t => t.id === currentEditId);
+                if (tutorIndex !== -1) {
+                    // Check if email is being changed and if it already exists
+                    if (email !== tutors[tutorIndex].email) {
+                        const existingTutor = tutors.find(t => t.email === email && t.id !== currentEditId);
+                        if (existingTutor) {
+                            showToast('This email is already in use by another tutor', 'error');
+                            return;
+                        }
+                    }
+                    
+                    tutors[tutorIndex] = {
+                        ...tutors[tutorIndex],
+                        name,
+                        email,
+                        expertise,
+                        points,
+                        bio: bio || tutors[tutorIndex].bio,
+                        badge: getBadgeFromPoints(points).color
+                    };
+                    
+                    // Update profile picture if new one was selected
+                    if (profilePictureData) {
+                        tutors[tutorIndex].avatar = profilePictureData;
+                    }
+                    
+                    showToast('Tutor updated successfully!', 'success');
+                }
+            } else {
+                // Add new tutor
+                // Check if email already exists
+                const existingTutor = tutors.find(t => t.email === email);
+                if (existingTutor) {
+                    showToast('This email is already in use by another tutor', 'error');
+                    return;
+                }
+                
+                const newTutor = {
+                    id: tutors.length > 0 ? Math.max(...tutors.map(t => t.id)) + 1 : 1,
+                    name,
+                    email,
+                    expertise,
+                    points,
+                    bio: bio || '',
+                    badge: getBadgeFromPoints(points).color,
+                    status: "Active",
+                    joined: new Date().toISOString().split('T')[0],
+                    avatar: profilePictureData || ""
+                };
+                
+                tutors.push(newTutor);
+                showToast('Tutor added successfully!', 'success');
+            }
+            
+            // Save to localStorage
+            saveTutors();
+            
+            // Update UI IMMEDIATELY
+            updateStats();
+            renderTutorsTable();
+            
+            // Close modal
+            closeTutorModal();
+        }
+
+        // View tutor details
+        function viewTutor(id) {
+            const tutor = tutors.find(t => t.id === id);
+            if (!tutor) return;
+            
+            const badge = getBadgeFromPoints(tutor.points);
+            
+            document.getElementById('viewTutorName').textContent = tutor.name;
+            document.getElementById('viewTutorEmail').textContent = tutor.email;
+            document.getElementById('viewTutorExpertise').textContent = tutor.expertise;
+            document.getElementById('viewTutorBadge').innerHTML = `<span class="badge badge-${badge.color}">${badge.name}</span>`;
+            document.getElementById('viewTutorPoints').textContent = tutor.points;
+            document.getElementById('viewTutorStatus').textContent = tutor.status;
+            document.getElementById('viewTutorJoined').textContent = tutor.joined;
+            document.getElementById('viewTutorBio').textContent = tutor.bio || 'No biography provided';
+            
+            // Set avatar
+            const avatarImg = document.getElementById('viewTutorAvatar');
+            const defaultAvatar = document.getElementById('viewTutorDefaultAvatar');
+            
+            if (tutor.avatar) {
+                avatarImg.src = tutor.avatar;
+                avatarImg.style.display = 'block';
+                defaultAvatar.style.display = 'none';
+            } else {
+                avatarImg.style.display = 'none';
+                defaultAvatar.style.display = 'flex';
+                defaultAvatar.textContent = tutor.name.charAt(0);
+            }
+            
+            // Store current tutor ID for editing
+            currentEditId = id;
+            
+            document.getElementById('viewTutorModal').classList.add('active');
+        }
+
+        // Close view tutor modal
+        function closeViewTutorModal() {
+            document.getElementById('viewTutorModal').classList.remove('active');
+        }
+
+        // Edit tutor from view modal
+        function editTutorFromView() {
+            closeViewTutorModal();
+            setTimeout(() => editTutor(currentEditId), 300);
+        }
+
+        // Edit tutor
+        function editTutor(id) {
+            const tutor = tutors.find(t => t.id === id);
+            if (!tutor) return;
+            
+            currentEditId = id;
+            profilePictureData = tutor.avatar || null;
+            document.getElementById('modalTitle').textContent = 'Edit Tutor';
+            document.getElementById('saveTutorBtn').innerHTML = '<i class="fas fa-save"></i> Update Tutor';
+            
+            // Fill form
+            document.getElementById('tutorName').value = tutor.name;
+            document.getElementById('tutorEmail').value = tutor.email;
+            document.getElementById('tutorExpertise').value = tutor.expertise;
+            document.getElementById('tutorPoints').value = tutor.points;
+            document.getElementById('tutorBio').value = tutor.bio || '';
+            
+            // Set profile picture
+            const preview = document.getElementById('profilePreview');
+            const placeholder = document.getElementById('profilePlaceholder');
+            
+            if (tutor.avatar) {
+                preview.src = tutor.avatar;
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+            } else {
+                preview.style.display = 'none';
+                placeholder.style.display = 'flex';
+                placeholder.innerHTML = '<i class="fas fa-user-edit"></i>';
+            }
+            
+            document.getElementById('tutorModal').classList.add('active');
+        }
+
+        // Delete tutor
+        function deleteTutor(id) {
+            if (!confirm('Are you sure you want to delete this tutor? This action cannot be undone.')) {
+                return;
+            }
+            
+            const tutorIndex = tutors.findIndex(t => t.id === id);
+            if (tutorIndex !== -1) {
+                const tutorName = tutors[tutorIndex].name;
+                tutors.splice(tutorIndex, 1);
+                saveTutors();
+                updateStats();
+                renderTutorsTable();
+                showToast(`Tutor "${tutorName}" deleted successfully`, 'success');
+            }
+        }
+
+        // Download PDF - FIXED: Now properly downloads tutors list
+        function downloadPDF() {
+            try {
+                // Create a new PDF instance
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'pt', 'a4');
+                
+                // Title
+                doc.setFontSize(24);
+                doc.setTextColor(26, 31, 54); // var(--secondary)
+                doc.text('ScholarX Learning Hub', 40, 50);
+                
+                doc.setFontSize(16);
+                doc.setTextColor(100, 116, 139); // var(--gray-dark)
+                doc.text('Tutors Report', 40, 80);
+                
+                // Date
+                doc.setFontSize(12);
+                doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 40, 100);
+                
+                // Stats
+                doc.setFontSize(14);
+                doc.setTextColor(26, 31, 54);
+                doc.text('Statistics:', 40, 130);
+                
+                // Stats in boxes
+                let yPos = 160;
+                const boxWidth = 120;
+                const boxHeight = 60;
+                const gap = 20;
+                
+                // Total Tutors
+                doc.setFillColor(74, 111, 255); // var(--primary)
+                doc.roundedRect(40, yPos, boxWidth, boxHeight, 5, 5, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(20);
+                doc.text(tutors.length.toString(), 40 + boxWidth/2, yPos + 25, { align: 'center' });
+                doc.setFontSize(10);
+                doc.text('Total Tutors', 40 + boxWidth/2, yPos + 45, { align: 'center' });
+                
+                // Total Points
+                doc.setFillColor(0, 201, 183); // var(--accent)
+                doc.roundedRect(40 + boxWidth + gap, yPos, boxWidth, boxHeight, 5, 5, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(20);
+                const totalPoints = tutors.reduce((sum, t) => sum + t.points, 0);
+                doc.text(totalPoints.toLocaleString(), 40 + boxWidth + gap + boxWidth/2, yPos + 25, { align: 'center' });
+                doc.setFontSize(10);
+                doc.text('Total Points', 40 + boxWidth + gap + boxWidth/2, yPos + 45, { align: 'center' });
+                
+                // Active Tutors
+                doc.setFillColor(245, 158, 11); // var(--warning)
+                doc.roundedRect(40 + (boxWidth + gap) * 2, yPos, boxWidth, boxHeight, 5, 5, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(20);
+                const activeTutors = tutors.filter(t => t.status === 'Active').length;
+                doc.text(activeTutors.toString(), 40 + (boxWidth + gap) * 2 + boxWidth/2, yPos + 25, { align: 'center' });
+                doc.setFontSize(10);
+                doc.text('Active Tutors', 40 + (boxWidth + gap) * 2 + boxWidth/2, yPos + 45, { align: 'center' });
+                
+                // Tutors Table Header
+                yPos = 250;
+                doc.setFontSize(16);
+                doc.setTextColor(26, 31, 54);
+                doc.text('Tutors List:', 40, yPos);
+                
+                // Table headers
+                yPos += 30;
+                doc.setFontSize(10);
+                doc.setTextColor(100, 116, 139);
+                doc.text('Name', 40, yPos);
+                doc.text('Email', 150, yPos);
+                doc.text('Expertise', 280, yPos);
+                doc.text('Points', 400, yPos);
+                doc.text('Badge', 470, yPos);
+                doc.text('Status', 540, yPos);
+                
+                // Horizontal line
+                doc.setDrawColor(226, 232, 240); // var(--gray-light)
+                doc.line(40, yPos + 5, 550, yPos + 5);
+                
+                // Tutors data
+                yPos += 20;
+                doc.setFontSize(9);
+                
+                tutors.forEach((tutor, index) => {
+                    if (yPos > 750) {
+                        doc.addPage();
+                        yPos = 40;
+                    }
+                    
+                    const badge = getBadgeFromPoints(tutor.points);
+                    const badgeColors = {
+                        'beginner': [99, 102, 241],
+                        'amateur': [139, 92, 246],
+                        'semi-pro': [236, 72, 153],
+                        'pro': [239, 68, 68],
+                        'expert': [245, 158, 11],
+                        'legendary': [16, 185, 129],
+                        'genius': [6, 182, 212]
+                    };
+                    
+                    // Tutor name (truncated if too long)
+                    const name = tutor.name.length > 20 ? tutor.name.substring(0, 20) + '...' : tutor.name;
+                    doc.setTextColor(26, 31, 54);
+                    doc.text(name, 40, yPos);
+                    
+                    // Email (truncated)
+                    const email = tutor.email.length > 25 ? tutor.email.substring(0, 25) + '...' : tutor.email;
+                    doc.setTextColor(74, 111, 255);
+                    doc.text(email, 150, yPos);
+                    
+                    // Expertise (truncated)
+                    const expertise = tutor.expertise.length > 25 ? tutor.expertise.substring(0, 25) + '...' : tutor.expertise;
+                    doc.setTextColor(100, 116, 139);
+                    doc.text(expertise, 280, yPos);
+                    
+                    // Points
+                    doc.setTextColor(26, 31, 54);
+                    doc.text(tutor.points.toString(), 400, yPos);
+                    
+                    // Badge with color
+                    const badgeColor = badgeColors[badge.color] || [100, 116, 139];
+                    doc.setFillColor(badgeColor[0], badgeColor[1], badgeColor[2]);
+                    doc.roundedRect(470, yPos - 8, 60, 16, 8, 8, 'F');
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(8);
+                    doc.text(badge.name, 470 + 30, yPos, { align: 'center' });
+                    doc.setFontSize(9);
+                    
+                    // Status
+                    const statusColor = tutor.status === 'Active' ? [16, 185, 129] : [239, 68, 68];
+                    doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+                    doc.text(tutor.status, 540, yPos);
+                    
+                    yPos += 20;
+                    
+                    // Separator line
+                    if (index < tutors.length - 1) {
+                        doc.setDrawColor(226, 232, 240);
+                        doc.line(40, yPos - 10, 550, yPos - 10);
+                    }
+                });
+                
+                // Footer
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.setTextColor(100, 116, 139);
+                    doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 20, { align: 'center' });
+                    doc.text('© ScholarX Learning Hub Management System', doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+                }
+                
+                // Save the PDF
+                doc.save(`ScholarX_Tutors_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+                
+                showToast('PDF downloaded successfully!', 'success');
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                showToast('Error generating PDF. Please try again.', 'error');
+            }
+        }
+
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('currentUser');
+                sessionStorage.clear();
+                showToast('Logged out successfully', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            // Set icon based on type
+            if (type === 'success') {
+                toast.querySelector('i').className = 'fas fa-check-circle';
+            } else if (type === 'error') {
+                toast.querySelector('i').className = 'fas fa-exclamation-circle';
+            } else if (type === 'warning') {
+                toast.querySelector('i').className = 'fas fa-exclamation-triangle';
+            }
+            
+            toastMessage.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Escape to close modals
+            if (e.key === 'Escape') {
+                if (document.getElementById('tutorModal').classList.contains('active')) {
+                    closeTutorModal();
+                }
+                if (document.getElementById('viewTutorModal').classList.contains('active')) {
+                    closeViewTutorModal();
+                }
+            }
+            
+            // Ctrl/Cmd + F to focus search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+            
+            // Ctrl/Cmd + N to add new tutor
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                openAddTutorModal();
+            }
+            
+            // Ctrl/Cmd + P to download PDF
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                downloadPDF();
+            }
+        });
+    </script>
+</body>
+</html>

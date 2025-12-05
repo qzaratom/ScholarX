@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScholarX Instructor Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4A6FFF;
+            --primary-dark: #3A5BDF;
+            --secondary: #1A1F36;
+            --accent: #00C9B7;
+            --light: #F8FAFC;
+            --gray-light: #E2E8F0;
+            --gray: #94A3B8;
+            --gray-dark: #64748B;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --sidebar-width: 260px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #F8FAFC;
+            color: #334155;
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--secondary) 0%, #0F172A 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .app-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .instructor-badge {
+            background: rgba(74, 111, 255, 0.15);
+            color: var(--primary);
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 24px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: var(--transition);
+            margin: 4px 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: calc(100% - 24px);
+            text-align: left;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: rgba(74, 111, 255, 0.15);
+            color: white;
+            border-left: 4px solid var(--primary);
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .profile-pic {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+        }
+
+        .profile-info h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .profile-info p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .logout-btn {
+            width: 100%;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 30px;
+            transition: var(--transition);
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            margin-bottom: 30px;
+        }
+
+        .dashboard-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .dashboard-header p {
+            color: var(--gray-dark);
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        /* Instructor Profile Bar */
+        .instructor-profile-bar {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px 25px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .profile-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .profile-bar-pic {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary);
+        }
+
+        .profile-bar-info h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+
+        .profile-bar-details {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: var(--gray-dark);
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .detail-item i {
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        .ranking-badge {
+            background: linear-gradient(135deg, var(--accent) 0%, #2CE0D0 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 120px;
+        }
+
+        .ranking-label {
+            font-size: 12px;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 3px;
+        }
+
+        .ranking-value {
+            font-size: 22px;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        /* Platform Review Card */
+        .platform-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            grid-column: span 2;
+        }
+
+        .platform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .review-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background: var(--light);
+            border-radius: var(--radius-sm);
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--gray-dark);
+            margin-top: 5px;
+        }
+
+        .reviews-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .review-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .review-item:last-child {
+            border-bottom: none;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .reviewer {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .review-rating {
+            color: #FF9529;
+            font-weight: 600;
+        }
+
+        .review-text {
+            color: var(--gray-dark);
+            font-size: 14px;
+        }
+
+        /* Overall Rating Distribution Card */
+        .distribution-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .course-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--light);
+            border-radius: var(--radius-sm);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .course-name {
+            font-weight: 500;
+            color: var(--secondary);
+        }
+
+        .course-rating {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Top Instructors Ranking */
+        .ranking-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+        }
+
+        .instructors-list {
+            margin-top: 20px;
+        }
+
+        .instructor-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid var(--gray-light);
+            transition: var(--transition);
+        }
+
+        .instructor-item:hover {
+            background: var(--light);
+        }
+
+        .instructor-item:last-child {
+            border-bottom: none;
+        }
+
+        .instructor-rank {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+            width: 40px;
+            text-align: center;
+        }
+
+        .instructor-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .instructor-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .instructor-details h4 {
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 4px;
+        }
+
+        .instructor-course {
+            font-size: 12px;
+            color: var(--gray);
+        }
+
+        .instructor-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        /* Study Distribution - Horizontal Layout */
+        .study-distribution-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            grid-column: span 2;
+        }
+
+        .distribution-horizontal {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding: 10px;
+            margin-top: 20px;
+        }
+
+        .distribution-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+        }
+
+        .bar-container {
+            width: 40px;
+            height: 150px;
+            background: var(--gray-light);
+            border-radius: var(--radius-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: var(--primary);
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+
+        .bar-label {
+            margin-top: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--secondary);
+            text-align: center;
+        }
+
+        .bar-value {
+            font-size: 11px;
+            color: var(--gray);
+            margin-top: 2px;
+        }
+
+        /* Form Controls */
+        .form-control {
+            padding: 8px 12px;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 111, 255, 0.1);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1001;
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            font-size: 18px;
+            color: var(--secondary);
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .platform-card,
+            .study-distribution-card {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .dashboard-header h1 {
+                font-size: 24px;
+            }
+            
+            .dashboard-header p {
+                font-size: 14px;
+            }
+            
+            .instructor-profile-bar {
+                flex-direction: column;
+                gap: 20px;
+                padding: 15px;
+            }
+            
+            .profile-bar-left {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .profile-bar-details {
+                flex-direction: column;
+                gap: 10px;
+                align-items: center;
+            }
+            
+            .ranking-badge {
+                min-width: 100px;
+                padding: 8px 15px;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .platform-card,
+            .distribution-card,
+            .ranking-card,
+            .study-distribution-card {
+                padding: 20px;
+            }
+            
+            .review-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .distribution-horizontal {
+                gap: 10px;
+            }
+            
+            .distribution-bar {
+                min-width: 60px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 10px;
+            }
+            
+            .profile-bar-pic {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .profile-bar-info h3 {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="logo.png" alt="ScholarX Logo" class="app-logo">
+            <div>
+                <div class="app-name">ScholarX</div>
+                <div class="instructor-badge">Instructor Portal</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <button class="nav-item active" onclick="navigateToDashboard()">
+                <!-- Changed to the original chart-line icon -->
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </button>
+            <button class="nav-item" onclick="navigateToRatingManagement()">
+                <i class="fas fa-star"></i>
+                <span>Rating & Feedback</span>
+            </button>
+            <button class="nav-item" onclick="navigateToLearningHub()">
+                <i class="fas fa-book-open"></i>
+                <span>Learning HUB</span>
+            </button>
+            <button class="nav-item" onclick="navigateToSettings()">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <img id="sidebarProfilePicture" src="default-instructor.png" alt="Profile" class="profile-pic">
+                <div class="profile-info">
+                    <h4 id="sidebarInstructorName">Not Logged In</h4>
+                    <p id="sidebarInstructorRole">Select System</p>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logoutInstructor()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="dashboard-header">
+            <h1>Instructor Dashboard</h1>
+            <p>Performance overview and analytics for all assigned courses</p>
+            
+            <!-- NEW: Instructor Profile Bar -->
+            <div class="instructor-profile-bar" id="instructorProfileBar">
+                <div class="profile-bar-left">
+                    <img id="profileBarPicture" src="default-instructor.png" alt="Profile" class="profile-bar-pic">
+                    <div class="profile-bar-info">
+                        <h3 id="profileBarName">Instructor Name</h3>
+                        <div class="profile-bar-details">
+                            <div class="detail-item">
+                                <i class="fas fa-user"></i>
+                                <span id="profileBarUsername">Username</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-envelope"></i>
+                                <span id="profileBarEmail">email@example.com</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-id-card"></i>
+                                <span id="profileBarRegNo">REG: N/A</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ranking-badge">
+                    <div class="ranking-label">Current Rank</div>
+                    <div class="ranking-value" id="rankingValue">#1</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Platform Review Card -->
+            <div class="platform-card">
+                <div class="platform-header">
+                    <h3 class="card-title">Platform Review</h3>
+                    <div style="color: var(--gray); font-size: 14px;">
+                        <i class="fas fa-calendar"></i>
+                        <span id="currentMonth">December 2024</span>
+                    </div>
+                </div>
+                
+                <div class="review-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalReviews">247</div>
+                        <div class="stat-label">Total Reviews</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="avgRating">4.7</div>
+                        <div class="stat-label">Avg Rating</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="responseRate">92%</div>
+                        <div class="stat-label">Response Rate</div>
+                    </div>
+                </div>
+                
+                <div class="reviews-container" id="reviewsList">
+                    <!-- Reviews will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Overall Rating Distribution Card -->
+            <div class="distribution-card">
+                <div class="platform-header">
+                    <h3 class="card-title">Course Rating Distribution</h3>
+                    <select id="courseFilter" class="form-control" style="width: auto; padding: 8px 12px; font-size: 13px;" onchange="updateCourseChart()">
+                        <option value="all">All Courses</option>
+                    </select>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="courseDistributionChart"></canvas>
+                </div>
+                
+                <div class="course-legend" id="courseLegend">
+                    <!-- Course legend will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Top Instructors Ranking -->
+            <div class="ranking-card">
+                <div class="platform-header">
+                    <h3 class="card-title">Top Instructors Ranking</h3>
+                    <button class="btn btn-sm" style="padding: 6px 12px; background: var(--light); font-size: 12px;" onclick="refreshRankings()">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+                
+                <div class="instructors-list" id="instructorsList">
+                    <!-- Instructors will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Study Distribution Card - Horizontal Layout -->
+            <div class="study-distribution-card">
+                <div class="platform-header">
+                    <h3 class="card-title">Study Distribution Overview</h3>
+                    <div style="color: var(--gray); font-size: 14px;">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Session Participation</span>
+                    </div>
+                </div>
+                
+                <div class="distribution-horizontal" id="studyDistribution">
+                    <!-- Study distribution bars will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Global variables
+        let ratingSystems = [];
+        let currentInstructor = null;
+        let currentSystemIndex = null;
+        let courseDistributionChart = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load rating systems
+            ratingSystems = JSON.parse(localStorage.getItem('ratingSystems') || '[]');
+            
+            // Check authentication and load user data
+            checkAuthentication();
+            
+            // Initialize dashboard
+            initializeDashboard();
+            
+            // Set current month
+            const now = new Date();
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
+            document.getElementById('currentMonth').textContent = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+            
+            // Setup mobile menu toggle
+            document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                const sidebar = document.getElementById('sidebar');
+                const menuToggle = document.getElementById('menuToggle');
+                
+                if (window.innerWidth <= 768 && 
+                    !sidebar.contains(event.target) && 
+                    !menuToggle.contains(event.target) && 
+                    sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                }
+            });
+        });
+
+        // Check if user is authenticated
+        function checkAuthentication() {
+            const isAuthenticated = sessionStorage.getItem('isAuthenticated');
+            const currentInstructorData = localStorage.getItem('currentInstructor');
+            
+            if (isAuthenticated !== 'true' || !currentInstructorData) {
+                // Redirect to login page if not authenticated
+                window.location.href = 'loginInstructor.html';
+                return;
+            }
+            
+            // Load instructor data
+            loadLoggedInInstructor();
+        }
+
+        // Load the logged-in instructor data from localStorage
+        function loadLoggedInInstructor() {
+            try {
+                // Get from localStorage (set by login page)
+                const instructorData = JSON.parse(localStorage.getItem('currentInstructor') || 'null');
+                
+                if (instructorData) {
+                    currentInstructor = instructorData;
+                    
+                    // Update sidebar profile
+                    updateSidebarProfile(instructorData);
+                    
+                    // Update profile bar
+                    updateProfileBar(instructorData);
+                    
+                    console.log("Loaded instructor:", instructorData.name);
+                } else {
+                    console.warn("No instructor data found in localStorage");
+                    // Redirect to login
+                    window.location.href = 'loginInstructor.html';
+                }
+            } catch (error) {
+                console.error("Error loading instructor data:", error);
+                // Redirect to login
+                window.location.href = 'loginInstructor.html';
+            }
+        }
+
+        // Update sidebar profile with logged in user data
+        function updateSidebarProfile(instructor) {
+            if (!instructor) return;
+            
+            // Update name
+            document.getElementById('sidebarInstructorName').textContent = instructor.name || "Instructor";
+            
+            // Update role - check if instructor has assigned rating systems
+            const ratingSystems = JSON.parse(localStorage.getItem('ratingSystems') || '[]');
+            const assignedSystems = ratingSystems.filter(system => {
+                return system.instructors && system.instructors.some(i => i.code === instructor.code);
+            });
+            
+            if (assignedSystems.length > 0) {
+                // Get the first assigned course name
+                const firstCourse = assignedSystems[0].courseName || "Assigned Course";
+                document.getElementById('sidebarInstructorRole').textContent = `${firstCourse} Instructor`;
+            } else {
+                document.getElementById('sidebarInstructorRole').textContent = "Instructor";
+            }
+            
+            // Update profile picture if available
+            if (instructor.profilePic) {
+                document.getElementById('sidebarProfilePicture').src = instructor.profilePic;
+            } else if (instructor.profilePicture) {
+                // Try alternative property name
+                document.getElementById('sidebarProfilePicture').src = instructor.profilePicture;
+            }
+        }
+
+        // Update profile bar with logged in user data
+        function updateProfileBar(instructor) {
+            if (!instructor) return;
+            
+            // Update name
+            document.getElementById('profileBarName').textContent = instructor.name || "Instructor";
+            
+            // Update username (using instructor code or email username)
+            const username = instructor.code || instructor.email?.split('@')[0] || instructor.name?.toLowerCase().replace(/\s+/g, '.') || "instructor";
+            document.getElementById('profileBarUsername').textContent = username;
+            
+            // Update email
+            document.getElementById('profileBarEmail').textContent = instructor.email || "instructor@scholarx.edu";
+            
+            // Update registration number
+            const regNo = instructor.code || `INS-${instructor.id || "000"}`;
+            document.getElementById('profileBarRegNo').textContent = `REG: ${regNo}`;
+            
+            // Update profile picture
+            if (instructor.profilePic) {
+                document.getElementById('profileBarPicture').src = instructor.profilePic;
+            } else if (instructor.profilePicture) {
+                // Try alternative property name
+                document.getElementById('profileBarPicture').src = instructor.profilePicture;
+            }
+            
+            // Calculate and update ranking
+            updateInstructorRanking(instructor);
+        }
+
+        // Calculate and update instructor ranking
+        function updateInstructorRanking(instructor) {
+            if (!instructor) return;
+            
+            // Get all instructors from localStorage
+            const allInstructors = JSON.parse(localStorage.getItem('instructors') || '[]');
+            
+            if (allInstructors.length === 0) {
+                document.getElementById('rankingValue').textContent = "#N/A";
+                return;
+            }
+            
+            // Get rating systems data
+            const ratingSystems = JSON.parse(localStorage.getItem('ratingSystems') || '[]');
+            
+            // Calculate average rating for each instructor
+            const instructorsWithRatings = allInstructors.map(instructor => {
+                // Find rating systems this instructor is assigned to
+                const assignedSystems = ratingSystems.filter(system => {
+                    return system.instructors && system.instructors.some(i => i.code === instructor.code);
+                });
+                
+                // Get all feedback for these systems
+                const allFeedback = JSON.parse(localStorage.getItem('studentFeedback') || '[]');
+                let totalRating = 0;
+                let feedbackCount = 0;
+                
+                assignedSystems.forEach(system => {
+                    const systemFeedback = allFeedback.filter(f => f.systemName === system.systemName);
+                    totalRating += systemFeedback.reduce((sum, fb) => sum + (fb.rating || 0), 0);
+                    feedbackCount += systemFeedback.length;
+                });
+                
+                const avgRating = feedbackCount > 0 ? totalRating / feedbackCount : 0;
+                
+                return {
+                    name: instructor.name,
+                    code: instructor.code,
+                    email: instructor.email,
+                    rating: avgRating,
+                    feedbackCount: feedbackCount
+                };
+            });
+            
+            // Sort by rating (highest first)
+            instructorsWithRatings.sort((a, b) => b.rating - a.rating);
+            
+            // Find current instructor's rank
+            const currentRankIndex = instructorsWithRatings.findIndex(inst => 
+                inst.code === instructor.code || inst.email === instructor.email
+            );
+            
+            // Update ranking badge
+            if (currentRankIndex !== -1) {
+                document.getElementById('rankingValue').textContent = `#${currentRankIndex + 1}`;
+            } else {
+                document.getElementById('rankingValue').textContent = "N/A";
+            }
+        }
+
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Navigation functions
+        function navigateToDashboard() { 
+            // Already on dashboard
+            if (!window.location.pathname.includes('instructordashboard.html')) {
+                window.location.href = 'instructordashboard.html';
+            }
+        }
+        
+        function navigateToRatingManagement() { 
+            window.location.href = 'instructorR&F.html'; 
+        }
+        
+        function navigateToLearningHub() { 
+            window.location.href = 'instructorLH.html'; 
+        }
+        
+        function navigateToSettings() { 
+            window.location.href = 'settingI.html'; 
+        }
+
+        // Logout instructor
+        function logoutInstructor() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear session
+                sessionStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('currentInstructor');
+                
+                // Redirect to login page
+                window.location.href = 'loginInstructor.html';
+            }
+        }
+
+        // Initialize dashboard with real data
+        function initializeDashboard() {
+            // Load real data from localStorage
+            loadPlatformReviews();
+            initializeCourseDistributionChart();
+            loadTopInstructors();
+            loadStudyDistribution();
+        }
+
+        // Load platform reviews from actual student feedback
+        function loadPlatformReviews() {
+            const allFeedback = JSON.parse(localStorage.getItem('studentFeedback') || '[]');
+            const reviewsList = document.getElementById('reviewsList');
+            
+            if (allFeedback.length === 0) {
+                reviewsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: var(--gray);">
+                        <i class="fas fa-comment-slash" style="font-size: 48px; margin-bottom: 15px;"></i>
+                        <h4 style="margin-bottom: 10px;">No Reviews Yet</h4>
+                        <p>Student feedback will appear here once submitted</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Calculate stats
+            const totalReviews = allFeedback.length;
+            const avgRating = totalReviews > 0 
+                ? (allFeedback.reduce((sum, fb) => sum + (fb.rating || 0), 0) / totalReviews).toFixed(1)
+                : 0;
+            
+            // Update stats
+            document.getElementById('totalReviews').textContent = totalReviews;
+            document.getElementById('avgRating').textContent = avgRating;
+            
+            // Calculate response rate (assuming some replies exist)
+            const replies = JSON.parse(localStorage.getItem('instructorReplies') || '{}');
+            const replyCount = Object.values(replies).flat().length;
+            const responseRate = totalReviews > 0 ? Math.min(100, Math.round((replyCount / totalReviews) * 100)) : 0;
+            document.getElementById('responseRate').textContent = `${responseRate}%`;
+            
+            // Show latest 5 reviews
+            const latestReviews = allFeedback
+                .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))
+                .slice(0, 5);
+            
+            let html = '';
+            latestReviews.forEach(review => {
+                const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+                html += `
+                    <div class="review-item">
+                        <div class="review-header">
+                            <span class="reviewer">${review.studentReg}</span>
+                            <span class="review-rating">${stars} (${review.rating}/5)</span>
+                        </div>
+                        <div class="review-text">${review.feedback || "No written feedback provided"}</div>
+                        <div style="font-size: 11px; color: var(--gray); margin-top: 5px;">
+                            ${new Date(review.submittedAt).toLocaleDateString()} • ${review.systemName || "Course"}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            reviewsList.innerHTML = html;
+        }
+
+        // Initialize course distribution chart with line graphs
+        function initializeCourseDistributionChart() {
+            const ctx = document.getElementById('courseDistributionChart').getContext('2d');
+            
+            // Get all rating systems
+            const systems = ratingSystems;
+            
+            if (systems.length === 0) {
+                // Show empty state
+                ctx.font = "16px Arial";
+                ctx.fillStyle = '#94A3B8';
+                ctx.textAlign = "center";
+                ctx.fillText("No course data available", ctx.canvas.width/2, ctx.canvas.height/2);
+                return;
+            }
+            
+            // Prepare course data
+            const courseData = [];
+            const courseColors = generateCourseColors(systems.length);
+            
+            systems.forEach((system, index) => {
+                // Get feedback for this system
+                const allFeedback = JSON.parse(localStorage.getItem('studentFeedback') || '[]');
+                const systemFeedback = allFeedback.filter(f => f.systemName === system.systemName);
+                
+                if (systemFeedback.length > 0 && system.sessions && system.sessions.length > 0) {
+                    // Calculate average rating per session
+                    const sessionRatings = {};
+                    
+                    systemFeedback.forEach(feedback => {
+                        if (feedback.sessionIndex !== undefined) {
+                            if (!sessionRatings[feedback.sessionIndex]) {
+                                sessionRatings[feedback.sessionIndex] = {
+                                    total: 0,
+                                    count: 0
+                                };
+                            }
+                            sessionRatings[feedback.sessionIndex].total += feedback.rating;
+                            sessionRatings[feedback.sessionIndex].count += 1;
+                        }
+                    });
+                    
+                    // Create data points for each session
+                    const dataPoints = system.sessions.map((session, sessionIndex) => {
+                        if (sessionRatings[sessionIndex]) {
+                            return (sessionRatings[sessionIndex].total / sessionRatings[sessionIndex].count).toFixed(1);
+                        }
+                        return null;
+                    });
+                    
+                    courseData.push({
+                        label: system.courseName || `Course ${index + 1}`,
+                        data: dataPoints,
+                        borderColor: courseColors[index],
+                        backgroundColor: courseColors[index] + '20',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    });
+                }
+            });
+            
+            // Destroy existing chart
+            if (courseDistributionChart) {
+                courseDistributionChart.destroy();
+            }
+            
+            // Create line chart
+            courseDistributionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: systems[0]?.sessions?.map((s, i) => `Session ${i+1}`) || ['Session 1', 'Session 2', 'Session 3', 'Session 4', 'Session 5'],
+                    datasets: courseData
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    return tooltipItems[0].label;
+                                },
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y}/5`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5,
+                            title: {
+                                display: true,
+                                text: 'Average Rating'
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Session Progress'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Update course filter dropdown
+            updateCourseFilter(systems);
+            
+            // Update course legend
+            updateCourseLegend(systems, courseColors);
+        }
+
+        // Generate colors for courses
+        function generateCourseColors(count) {
+            const colors = [
+                '#4A6FFF', '#00C9B7', '#10B981', '#F59E0B', '#EF4444',
+                '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16', '#F97316'
+            ];
+            
+            if (count <= colors.length) {
+                return colors.slice(0, count);
+            }
+            
+            const additionalColors = [];
+            for (let i = colors.length; i < count; i++) {
+                const hue = (i * 137.508) % 360;
+                additionalColors.push(`hsl(${hue}, 70%, 60%)`);
+            }
+            
+            return colors.concat(additionalColors);
+        }
+
+        // Update course filter dropdown
+        function updateCourseFilter(systems) {
+            const filter = document.getElementById('courseFilter');
+            filter.innerHTML = '<option value="all">All Courses</option>';
+            
+            systems.forEach((system, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = system.courseName || `Course ${index + 1}`;
+                filter.appendChild(option);
+            });
+        }
+
+        // Update course legend
+        function updateCourseLegend(systems, colors) {
+            const legendContainer = document.getElementById('courseLegend');
+            legendContainer.innerHTML = '';
+            
+            systems.forEach((system, index) => {
+                // Get average rating for this course
+                const allFeedback = JSON.parse(localStorage.getItem('studentFeedback') || '[]');
+                const systemFeedback = allFeedback.filter(f => f.systemName === system.systemName);
+                const avgRating = systemFeedback.length > 0 
+                    ? (systemFeedback.reduce((sum, fb) => sum + fb.rating, 0) / systemFeedback.length).toFixed(1)
+                    : 'N/A';
+                
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.innerHTML = `
+                    <div class="legend-color" style="background-color: ${colors[index]}"></div>
+                    <span class="course-name">${system.courseName || `Course ${index + 1}`}</span>
+                    <span class="course-rating">Avg: ${avgRating}/5</span>
+                `;
+                legendContainer.appendChild(legendItem);
+            });
+        }
+
+        // Update course chart based on filter
+        function updateCourseChart() {
+            const filterValue = document.getElementById('courseFilter').value;
+            
+            if (filterValue === 'all') {
+                // Show all courses
+                initializeCourseDistributionChart();
+            } else {
+                // Show specific course
+                const systemIndex = parseInt(filterValue);
+                const system = ratingSystems[systemIndex];
+                
+                if (system) {
+                    // Update chart to show only this course
+                    updateSingleCourseChart(system);
+                }
+            }
+        }
+
+        // Update chart for single course
+        function updateSingleCourseChart(system) {
+            const ctx = document.getElementById('courseDistributionChart').getContext('2d');
+            
+            // Get feedback for this system
+            const allFeedback = JSON.parse(localStorage.getItem('studentFeedback') || '[]');
+            const systemFeedback = allFeedback.filter(f => f.systemName === system.systemName);
+            
+            // Calculate session ratings
+            const sessionRatings = {};
+            systemFeedback.forEach(feedback => {
+                if (feedback.sessionIndex !== undefined) {
+                    if (!sessionRatings[feedback.sessionIndex]) {
+                        sessionRatings[feedback.sessionIndex] = {
+                            total: 0,
+                            count: 0
+                        };
+                    }
+                    sessionRatings[feedback.sessionIndex].total += feedback.rating;
+                    sessionRatings[feedback.sessionIndex].count += 1;
+                }
+            });
+            
+            const dataPoints = system.sessions ? system.sessions.map((session, sessionIndex) => {
+                if (sessionRatings[sessionIndex]) {
+                    return (sessionRatings[sessionIndex].total / sessionRatings[sessionIndex].count).toFixed(1);
+                }
+                return null;
+            }) : [];
+            
+            // Destroy existing chart
+            if (courseDistributionChart) {
+                courseDistributionChart.destroy();
+            }
+            
+            // Create single course line chart
+            courseDistributionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: system.sessions ? system.sessions.map((s, i) => `Session ${i+1}`) : ['Session 1', 'Session 2', 'Session 3'],
+                    datasets: [{
+                        label: system.courseName || 'Course',
+                        data: dataPoints,
+                        borderColor: '#4A6FFF',
+                        backgroundColor: '#4A6FFF20',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5,
+                            title: {
+                                display: true,
+                                text: 'Average Rating'
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Session Progress'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Update legend
+            const lastRating = dataPoints.length > 0 ? dataPoints[dataPoints.length - 1] : 'N/A';
+            document.getElementById('courseLegend').innerHTML = `
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #4A6FFF"></div>
+                    <span class="course-name">${system.courseName || 'Course'}</span>
+                    <span class="course-rating">Current: ${lastRating}/5</span>
+                </div>
+            `;
+        }
+
+        // Load top instructors from actual data
+        function loadTopInstructors() {
+            const instructorsList = document.getElementById('instructorsList');
+            
+            // Get all instructors from localStorage
+            const allInstructors = JSON.parse(localStorage.getItem('instructors') || '[]');
+            
+            if (allInstructors.length === 0) {
+                instructorsList.innerHTML = `
+                    <div style="text-align: center; padding: 30px; color: var(--gray);">
+                        <i class="fas fa-users" style="font-size: 36px; margin-bottom: 10px;"></i>
+                        <p>No instructor data available</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Get rating systems data for calculating ratings
+            const ratingSystems = JSON.parse(localStorage.getItem('ratingSystems') || '[]');
+            const allFeedback = JSON.parse(localStorage.getItem('studentFeedback') || '[]');
+            
+            // Calculate ratings for each instructor
+            const instructorsWithRatings = allInstructors.map(instructor => {
+                // Find rating systems this instructor is assigned to
+                const assignedSystems = ratingSystems.filter(system => {
+                    return system.instructors && system.instructors.some(i => i.code === instructor.code);
+                });
+                
+                // Get all feedback for these systems
+                let totalRating = 0;
+                let feedbackCount = 0;
+                
+                assignedSystems.forEach(system => {
+                    const systemFeedback = allFeedback.filter(f => f.systemName === system.systemName);
+                    totalRating += systemFeedback.reduce((sum, fb) => sum + (fb.rating || 0), 0);
+                    feedbackCount += systemFeedback.length;
+                });
+                
+                const avgRating = feedbackCount > 0 ? (totalRating / feedbackCount).toFixed(1) : 0;
+                
+                return {
+                    name: instructor.name,
+                    course: assignedSystems.length > 0 ? assignedSystems[0].courseName : 'No Assigned Course',
+                    rating: parseFloat(avgRating),
+                    profilePic: instructor.profilePic || 'default-instructor.png',
+                    feedbackCount: feedbackCount
+                };
+            });
+            
+            // Sort by rating (highest first)
+            instructorsWithRatings.sort((a, b) => b.rating - a.rating);
+            
+            // Display top 5 instructors
+            let html = '';
+            instructorsWithRatings.slice(0, 5).forEach((instructor, index) => {
+                html += `
+                    <div class="instructor-item">
+                        <div class="instructor-rank">#${index + 1}</div>
+                        <div class="instructor-info">
+                            <img src="${instructor.profilePic}" alt="${instructor.name}" class="instructor-avatar">
+                            <div class="instructor-details">
+                                <h4>${instructor.name}</h4>
+                                <div class="instructor-course">${instructor.course}</div>
+                            </div>
+                        </div>
+                        <div class="instructor-rating">
+                            <i class="fas fa-star"></i>
+                            <span>${instructor.rating.toFixed(1)}/5</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            instructorsList.innerHTML = html;
+        }
+
+        // Load study distribution data
+        function loadStudyDistribution() {
+            const distributionContainer = document.getElementById('studyDistribution');
+            
+            // Get all systems
+            const systems = ratingSystems;
+            
+            if (systems.length === 0) {
+                distributionContainer.innerHTML = `
+                    <div style="text-align: center; width: 100%; padding: 30px; color: var(--gray);">
+                        <i class="fas fa-chart-bar" style="font-size: 36px; margin-bottom: 10px;"></i>
+                        <p>No study distribution data available</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Calculate participation for each system
+            let html = '';
+            const colors = ['#4A6FFF', '#00C9B7', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
+            
+            systems.slice(0, 6).forEach((system, index) => {
+                // Get feedback for this system
+                const allFeedback = JSON.parse(localStorage.getItem('studentFeedback') || '[]');
+                const systemFeedback = allFeedback.filter(f => f.systemName === system.systemName);
+                
+                // Calculate participation percentage
+                const totalSessions = system.sessions ? system.sessions.length : 5;
+                const totalPossible = totalSessions * 30; // Assuming 30 students per course
+                const actualParticipation = systemFeedback.length;
+                const percentage = totalPossible > 0 ? Math.min(100, (actualParticipation / totalPossible) * 100) : 0;
+                
+                // Truncate course name if too long
+                const courseName = system.courseName || `Course ${index + 1}`;
+                const displayName = courseName.length > 15 
+                    ? courseName.substring(0, 12) + '...' 
+                    : courseName;
+                
+                html += `
+                    <div class="distribution-bar">
+                        <div class="bar-container">
+                            <div class="bar-fill" style="height: ${percentage}%; background-color: ${colors[index % colors.length]};"></div>
+                        </div>
+                        <div class="bar-label">${displayName}</div>
+                        <div class="bar-value">${Math.round(percentage)}%</div>
+                    </div>
+                `;
+            });
+            
+            distributionContainer.innerHTML = html;
+        }
+
+        // Refresh rankings
+        function refreshRankings() {
+            loadTopInstructors();
+            
+            // Also refresh current instructor's ranking
+            if (currentInstructor) {
+                updateInstructorRanking(currentInstructor);
+            }
+            
+            showToast("Rankings refreshed", "success");
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            // Style the toast
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: ${type === 'success' ? 'var(--success)' : 'var(--primary)'};
+                color: white;
+                padding: 12px 18px;
+                border-radius: var(--radius-sm);
+                box-shadow: var(--shadow-lg);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                z-index: 3000;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            // Add to page
+            document.body.appendChild(toast);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+            
+            // Add keyframe animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    </script>
+</body>
+</html>

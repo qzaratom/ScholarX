@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ScholarX Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4A6FFF;
+            --primary-dark: #3A5BDF;
+            --secondary: #1A1F36;
+            --accent: #00C9B7;
+            --light: #F8FAFC;
+            --gray-light: #E2E8F0;
+            --gray: #94A3B8;
+            --gray-dark: #64748B;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --sidebar-width: 260px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #F8FAFC;
+            color: #334155;
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar - EXACTLY SAME AS RATING PAGE */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--secondary) 0%, #0F172A 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .app-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .admin-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--gray-light);
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 24px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: var(--transition);
+            margin: 4px 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: rgba(74, 111, 255, 0.15);
+            color: white;
+            border-left: 4px solid var(--primary);
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .profile-pic {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+        }
+
+        .profile-info h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .profile-info p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .logout-btn {
+            width: 100%;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 30px;
+            transition: var(--transition);
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header-title h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .header-title p {
+            color: var(--gray-dark);
+            font-size: 16px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .date-display {
+            background: white;
+            padding: 12px 20px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--gray-light);
+            font-weight: 600;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification-btn {
+            position: relative;
+            background: white;
+            border: 1px solid var(--gray-light);
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .notification-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Quick Stats */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+        }
+
+        .stat-icon.systems {
+            background: linear-gradient(135deg, var(--primary) 0%, #6C8BFF 100%);
+        }
+
+        .stat-icon.students {
+            background: linear-gradient(135deg, var(--accent) 0%, #2CE0D0 100%);
+        }
+
+        .stat-icon.instructors {
+            background: linear-gradient(135deg, var(--success) 0%, #22C55E 100%);
+        }
+
+        .stat-icon.rating {
+            background: linear-gradient(135deg, var(--warning) 0%, #FBBF24 100%);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--gray-dark);
+            font-weight: 500;
+        }
+
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .trend-up {
+            color: var(--success);
+        }
+
+        .trend-down {
+            color: var(--danger);
+        }
+
+        /* Main Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Charts Container */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .chart-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .chart-period {
+            display: flex;
+            gap: 10px;
+        }
+
+        .period-btn {
+            padding: 8px 16px;
+            background: var(--light);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .period-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        /* Right Sidebar - Recent Activity & Top Instructors */
+        .sidebar-content {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .activity-card, .instructors-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .card-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .view-all {
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .view-all:hover {
+            text-decoration: underline;
+        }
+
+        /* Activity List */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .activity-icon.system {
+            background: var(--primary);
+        }
+
+        .activity-icon.rating {
+            background: var(--success);
+        }
+
+        .activity-icon.feedback {
+            background: var(--warning);
+        }
+
+        .activity-icon.user {
+            background: var(--accent);
+        }
+
+        .activity-content h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 4px;
+        }
+
+        .activity-content p {
+            font-size: 13px;
+            color: var(--gray-dark);
+            margin-bottom: 4px;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: var(--gray);
+        }
+
+        /* Instructors List */
+        .instructors-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .instructor-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .instructor-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .instructor-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--gray-light);
+        }
+
+        .instructor-info {
+            flex: 1;
+        }
+
+        .instructor-info h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 4px;
+        }
+
+        .instructor-info p {
+            font-size: 13px;
+            color: var(--gray-dark);
+        }
+
+        .instructor-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--light);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* Recent Systems */
+        .recent-systems {
+            background: white;
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .systems-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .systems-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .systems-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .systems-table th {
+            text-align: left;
+            padding: 16px;
+            border-bottom: 2px solid var(--gray-light);
+            color: var(--gray-dark);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .systems-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--gray-light);
+            font-size: 14px;
+        }
+
+        .system-name {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .system-course {
+            color: var(--gray-dark);
+        }
+
+        .rating-badge {
+            background: rgba(74, 111, 255, 0.1);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .btn-view {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(74, 111, 255, 0.25);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(74, 111, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--secondary);
+            border: 1px solid var(--gray-light);
+        }
+
+        .btn-secondary:hover {
+            background: var(--light);
+            border-color: var(--gray);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--secondary);
+            color: white;
+            padding: 16px 24px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 3000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            font-size: 20px;
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .quick-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .systems-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar - EXACTLY SAME AS RATING PAGE -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="logo.png" alt="ScholarX Logo" class="app-logo" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22%3E%3Crect%20width=%22100%22%20height=%22100%22%20fill=%22%234A6FFF%22/%3E%3Ctext%20x=%2250%22%20y=%2260%22%20font-family=%22Arial%22%20font-size=%2240%22%20fill=%22white%22%20text-anchor=%22middle%22%3ESX%3C/text%3E%3C/svg%3E'">
+            <div>
+                <div class="app-name">ScholarX</div>
+                <div class="admin-badge">Institutional Admin</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="Admindashboard.html" class="nav-item active">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="suggestionboxe.html" class="nav-item">
+                <i class="fas fa-lightbulb"></i>
+                <span>Suggestion Box</span>
+            </a>
+                <a href="ratingandfeedback.html" class="nav-item">
+                <i class="fas fa-star"></i>
+                <span>Rating & Feedback</span>
+            </a>
+            <a href="adminLH.html" class="nav-item">
+                <i class="fas fa-book-open"></i>
+                <span>Learning HUB</span>
+            </a>
+            <a href="settingA.html" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <img id="profilePicture" src="default-avatar.png" alt="Profile" class="profile-pic" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22%3E%3Ccircle%20cx=%2250%22%20cy=%2250%22%20r=%2245%22%20fill=%22%234A6FFF%22/%3E%3Ctext%20x=%2250%22%20y=%2260%22%20font-family=%22Arial%22%20font-size=%2240%22%20fill=%22white%22%20text-anchor=%22middle%22%3EA%3C/text%3E%3C/svg%3E'">
+                <div class="profile-info">
+                    <h4 id="adminName">Administrator</h4>
+                    <p id="adminRole">Super Admin</p>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="header-title">
+                <h1>Admin Dashboard</h1>
+                <p>Welcome back! Here's what's happening with your systems today.</p>
+            </div>
+            <div class="header-actions">
+                <div class="date-display">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span id="currentDate">Loading...</span>
+                </div>
+                <div class="notification-btn" onclick="showNotifications()">
+                    <i class="fas fa-bell"></i>
+                    <div class="notification-badge" id="notificationCount">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" id="totalSystems">0</div>
+                        <div class="stat-label">Active Systems</div>
+                    </div>
+                    <div class="stat-icon systems">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                </div>
+                <div class="stat-trend" id="systemsTrend">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Loading...</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" id="totalStudents">0</div>
+                        <div class="stat-label">Total Students</div>
+                    </div>
+                    <div class="stat-icon students">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                </div>
+                <div class="stat-trend" id="studentsTrend">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Loading...</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" id="totalInstructors">0</div>
+                        <div class="stat-label">Total Instructors</div>
+                    </div>
+                    <div class="stat-icon instructors">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                </div>
+                <div class="stat-trend" id="instructorsTrend">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Loading...</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" id="avgRating">0.0</div>
+                        <div class="stat-label">Avg. Rating</div>
+                    </div>
+                    <div class="stat-icon rating">
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+                <div class="stat-trend" id="ratingTrend">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Left Column - Charts -->
+            <div class="charts-container">
+                <!-- Rating Performance Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>System Ratings Overview</h3>
+                        <div class="chart-period">
+                            <button class="period-btn active" onclick="changeChartView('system')">By System</button>
+                            <button class="period-btn" onclick="changeChartView('month')">By Month</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="ratingChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Feedback Distribution Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Feedback Distribution</h3>
+                        <div class="chart-period">
+                            <button class="period-btn active" onclick="changeFeedbackView('rating')">By Rating</button>
+                            <button class="period-btn" onclick="changeFeedbackView('sentiment')">By Sentiment</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="feedbackChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Activity & Top Instructors -->
+            <div class="sidebar-content">
+                <!-- Recent Activity -->
+                <div class="activity-card">
+                    <div class="card-header">
+                        <h3>Recent Activity</h3>
+                        <a href="ratingandfeedback.html" class="view-all">View All</a>
+                    </div>
+                    <div class="activity-list" id="activityList">
+                        <!-- Activities will be populated from real data -->
+                    </div>
+                </div>
+
+                <!-- Top Instructors -->
+                <div class="instructors-card">
+                    <div class="card-header">
+                        <h3>Top Instructors</h3>
+                        <a href="ratingandfeedback.html" class="view-all">View All</a>
+                    </div>
+                    <div class="instructors-list" id="instructorsList">
+                        <!-- Instructors will be populated from real data -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Systems -->
+        <div class="recent-systems">
+            <div class="systems-header">
+                <h2>Recent Rating Systems</h2>
+                <a href="ratingandfeedback.html">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Create New System
+                    </button>
+                </a>
+            </div>
+            
+            <table class="systems-table">
+                <thead>
+                    <tr>
+                        <th>System Name</th>
+                        <th>Course</th>
+                        <th>Students</th>
+                        <th>Sessions</th>
+                        <th>Avg. Rating</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="systemsTable">
+                    <!-- Systems will be populated from real data -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Operation completed successfully!</span>
+    </div>
+
+    <script>
+        // Global variables
+        let ratingSystems = [];
+        let currentUser = null;
+        let ratingChart = null;
+        let feedbackChart = null;
+        let chartView = 'system';
+        let feedbackView = 'rating';
+        let previousStats = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            checkAuthentication();
+            
+            // Load user data
+            loadUserData();
+            
+            // Load rating systems
+            loadRatingSystems();
+            
+            // Initialize date display
+            updateDateDisplay();
+            
+            // Setup mobile menu toggle
+            document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
+            
+            // Setup real-time updates
+            setupRealTimeUpdates();
+            
+            // Listen for storage changes (for cross-page updates)
+            window.addEventListener('storage', handleStorageChange);
+        });
+
+        // Check authentication
+        function checkAuthentication() {
+            const currentUser = localStorage.getItem('currentUser');
+            const isAuthenticated = sessionStorage.getItem('isAuthenticated');
+            
+            if (!currentUser || isAuthenticated !== 'true') {
+                window.location.href = 'loginAdmin.html';
+            }
+        }
+
+        // Load user data
+        function loadUserData() {
+            const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            currentUser = userData;
+            
+            if (userData.name) {
+                document.getElementById('adminName').textContent = userData.name;
+            }
+            
+            if (userData.role) {
+                document.getElementById('adminRole').textContent = userData.role;
+            }
+            
+            if (userData.profilePic) {
+                document.getElementById('profilePicture').src = userData.profilePic;
+            }
+        }
+
+        // Load rating systems
+        function loadRatingSystems() {
+            const stored = JSON.parse(localStorage.getItem('ratingSystems') || '[]');
+            ratingSystems = stored;
+            
+            // Update all dashboard components
+            updateAllDashboardData();
+            
+            // Store previous stats for trend calculation
+            if (!previousStats) {
+                previousStats = calculateStats();
+            }
+        }
+
+        // Update all dashboard data
+        function updateAllDashboardData() {
+            // Update statistics
+            updateStatistics();
+            
+            // Update charts
+            updateCharts();
+            
+            // Update recent systems table
+            updateSystemsTable();
+            
+            // Update activity list
+            updateActivityList();
+            
+            // Update top instructors
+            updateTopInstructors();
+        }
+
+        // Calculate statistics
+        function calculateStats() {
+            const totalStudents = ratingSystems.reduce((sum, system) => sum + system.students.length, 0);
+            const totalInstructors = ratingSystems.reduce((sum, system) => sum + system.instructors.length, 0);
+            const avgRating = calculateAverageRating();
+            
+            return {
+                systems: ratingSystems.length,
+                students: totalStudents,
+                instructors: totalInstructors,
+                rating: avgRating
+            };
+        }
+
+        // Calculate average rating
+        function calculateAverageRating() {
+            if (ratingSystems.length === 0) return 0;
+            
+            let total = 0;
+            let count = 0;
+            
+            ratingSystems.forEach(system => {
+                if (system.ratings) {
+                    Object.values(system.ratings).forEach(session => {
+                        total += session.averageRating || 0;
+                        count++;
+                    });
+                }
+            });
+            
+            return count > 0 ? total / count : 0;
+        }
+
+        // Calculate trends
+        function calculateTrends(currentStats) {
+            if (!previousStats) return { systems: 0, students: 0, instructors: 0, rating: 0 };
+            
+            return {
+                systems: currentStats.systems - previousStats.systems,
+                students: currentStats.students - previousStats.students,
+                instructors: currentStats.instructors - previousStats.instructors,
+                rating: currentStats.rating - previousStats.rating
+            };
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const currentStats = calculateStats();
+            const trends = calculateTrends(currentStats);
+            
+            // Update values
+            document.getElementById('totalSystems').textContent = currentStats.systems;
+            document.getElementById('totalStudents').textContent = currentStats.students;
+            document.getElementById('totalInstructors').textContent = currentStats.instructors;
+            document.getElementById('avgRating').textContent = currentStats.rating.toFixed(1);
+            
+            // Update trends
+            updateTrendElement('systemsTrend', trends.systems, 'systems');
+            updateTrendElement('studentsTrend', trends.students, 'students');
+            updateTrendElement('instructorsTrend', trends.instructors, 'instructors');
+            updateTrendElement('ratingTrend', trends.rating, 'rating');
+            
+            // Store for next comparison
+            previousStats = currentStats;
+        }
+
+        // Update trend element
+        function updateTrendElement(elementId, trendValue, label) {
+            const element = document.getElementById(elementId);
+            
+            if (trendValue > 0) {
+                element.className = 'stat-trend trend-up';
+                element.innerHTML = `<i class="fas fa-arrow-up"></i><span>+${Math.abs(trendValue)} ${label}</span>`;
+            } else if (trendValue < 0) {
+                element.className = 'stat-trend trend-down';
+                element.innerHTML = `<i class="fas fa-arrow-down"></i><span>-${Math.abs(trendValue)} ${label}</span>`;
+            } else {
+                element.className = 'stat-trend';
+                element.innerHTML = `<i class="fas fa-minus"></i><span>No change</span>`;
+            }
+        }
+
+        // Update charts
+        function updateCharts() {
+            updateRatingChart();
+            updateFeedbackChart();
+        }
+
+        // Update rating chart
+        function updateRatingChart() {
+            const ctx = document.getElementById('ratingChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (ratingChart) {
+                ratingChart.destroy();
+            }
+            
+            let labels, data;
+            
+            if (chartView === 'system') {
+                // Show ratings by system
+                labels = ratingSystems.map(system => system.systemName);
+                data = ratingSystems.map(system => calculateSystemRating(system));
+            } else {
+                // Show ratings by month (simulated based on creation date)
+                const monthlyData = groupRatingsByMonth();
+                labels = Object.keys(monthlyData);
+                data = Object.values(monthlyData).map(arr => arr.length > 0 ? 
+                    arr.reduce((a, b) => a + b, 0) / arr.length : 0);
+            }
+            
+            ratingChart = new Chart(ctx, {
+                type: chartView === 'system' ? 'bar' : 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Average Rating',
+                        data: data,
+                        backgroundColor: chartView === 'system' ? 
+                            'rgba(74, 111, 255, 0.8)' : 'rgba(74, 111, 255, 0.1)',
+                        borderColor: 'rgb(74, 111, 255)',
+                        borderWidth: chartView === 'system' ? 0 : 3,
+                        tension: 0.3,
+                        fill: chartView === 'system' ? false : true,
+                        pointBackgroundColor: 'rgb(74, 111, 255)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: chartView === 'system' ? 0 : 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5,
+                            title: {
+                                display: true,
+                                text: 'Rating (out of 5)'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Group ratings by month
+        function groupRatingsByMonth() {
+            const monthlyData = {};
+            
+            ratingSystems.forEach(system => {
+                if (system.ratings) {
+                    Object.values(system.ratings).forEach(session => {
+                        if (session.averageRating > 0) {
+                            const date = new Date(system.createdAt);
+                            const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`;
+                            
+                            if (!monthlyData[monthYear]) {
+                                monthlyData[monthYear] = [];
+                            }
+                            monthlyData[monthYear].push(session.averageRating);
+                        }
+                    });
+                }
+            });
+            
+            return monthlyData;
+        }
+
+        // Calculate system rating
+        function calculateSystemRating(system) {
+            if (!system.ratings) return 0;
+            
+            let total = 0;
+            let count = 0;
+            
+            Object.values(system.ratings).forEach(session => {
+                if (session.averageRating > 0) {
+                    total += session.averageRating;
+                    count++;
+                }
+            });
+            
+            return count > 0 ? total / count : 0;
+        }
+
+        // Update feedback chart
+        function updateFeedbackChart() {
+            const ctx = document.getElementById('feedbackChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (feedbackChart) {
+                feedbackChart.destroy();
+            }
+            
+            let labels, data;
+            
+            if (feedbackView === 'rating') {
+                // Show feedback by rating categories
+                const ratingCategories = analyzeRatingCategories();
+                labels = Object.keys(ratingCategories);
+                data = Object.values(ratingCategories);
+            } else {
+                // Show feedback by sentiment
+                const sentimentAnalysis = analyzeSentiment();
+                labels = Object.keys(sentimentAnalysis);
+                data = Object.values(sentimentAnalysis);
+            }
+            
+            feedbackChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: feedbackView === 'rating' ? [
+                            'rgb(74, 111, 255)',    // Excellent
+                            'rgb(0, 201, 183)',     // Good
+                            'rgb(245, 158, 11)',    // Average
+                            'rgb(239, 68, 68)',     // Poor
+                            'rgb(148, 163, 184)'    // Very Poor
+                        ] : [
+                            'rgb(16, 185, 129)',    // Positive
+                            'rgb(245, 158, 11)',    // Neutral
+                            'rgb(239, 68, 68)'      // Negative
+                        ],
+                        borderWidth: 2,
+                        borderColor: 'white'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return `${context.label}: ${context.parsed} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        // Analyze rating categories
+        function analyzeRatingCategories() {
+            const categories = {
+                'Excellent (4.5-5.0)': 0,
+                'Good (4.0-4.4)': 0,
+                'Average (3.0-3.9)': 0,
+                'Poor (2.0-2.9)': 0,
+                'Very Poor (< 2.0)': 0
+            };
+            
+            ratingSystems.forEach(system => {
+                if (system.ratings) {
+                    Object.values(system.ratings).forEach(session => {
+                        const rating = session.averageRating;
+                        if (rating >= 4.5) categories['Excellent (4.5-5.0)']++;
+                        else if (rating >= 4.0) categories['Good (4.0-4.4)']++;
+                        else if (rating >= 3.0) categories['Average (3.0-3.9)']++;
+                        else if (rating >= 2.0) categories['Poor (2.0-2.9)']++;
+                        else if (rating > 0) categories['Very Poor (< 2.0)']++;
+                    });
+                }
+            });
+            
+            return categories;
+        }
+
+        // Analyze sentiment from feedback
+        function analyzeSentiment() {
+            const sentiment = { Positive: 0, Neutral: 0, Negative: 0 };
+            
+            ratingSystems.forEach(system => {
+                if (system.ratings) {
+                    Object.values(system.ratings).forEach(session => {
+                        if (session.studentFeedback && session.studentFeedback.length > 0) {
+                            session.studentFeedback.forEach(feedback => {
+                                const text = feedback.toLowerCase();
+                                if (text.includes('great') || text.includes('excellent') || text.includes('good') || text.includes('helpful')) {
+                                    sentiment.Positive++;
+                                } else if (text.includes('bad') || text.includes('poor') || text.includes('worse') || text.includes('terrible')) {
+                                    sentiment.Negative++;
+                                } else {
+                                    sentiment.Neutral++;
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+            
+            return sentiment;
+        }
+
+        // Update systems table
+        function updateSystemsTable() {
+            const tableBody = document.getElementById('systemsTable');
+            
+            if (ratingSystems.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px;">
+                            <div style="color: var(--gray);">
+                                <i class="fas fa-star" style="font-size: 48px; margin-bottom: 20px; display: block;"></i>
+                                <h3 style="margin-bottom: 10px;">No Rating Systems Created</h3>
+                                <p style="margin-bottom: 20px;">Create your first rating system to get started</p>
+                                <a href="ratingandfeedback.html">
+                                    <button class="btn btn-primary">
+                                        <i class="fas fa-plus"></i>
+                                        Create New System
+                                    </button>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Show only recent 5 systems
+            const recentSystems = ratingSystems.slice(-5).reverse();
+            
+            tableBody.innerHTML = recentSystems.map(system => {
+                const avgRating = calculateSystemRating(system);
+                const status = avgRating > 0 ? 'Active' : 'Pending';
+                
+                return `
+                    <tr>
+                        <td>
+                            <div class="system-name">${system.systemName}</div>
+                            <div class="system-course">${system.courseName}</div>
+                        </td>
+                        <td>${system.courseName}</td>
+                        <td>${system.students.length}</td>
+                        <td>${system.sessions.length}</td>
+                        <td>
+                            <span class="rating-badge">${avgRating.toFixed(1)} ★</span>
+                        </td>
+                        <td>
+                            <span class="status-badge ${avgRating > 0 ? 'status-active' : 'status-pending'}">
+                                ${status}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="action-btn btn-view" onclick="viewSystem('${system.systemName}')">
+                                <i class="fas fa-eye"></i>
+                                View
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Update activity list
+        function updateActivityList() {
+            const activityList = document.getElementById('activityList');
+            
+            if (ratingSystems.length === 0) {
+                activityList.innerHTML = `
+                    <div class="activity-item">
+                        <div class="activity-icon user">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>Welcome to ScholarX</h4>
+                            <p>Admin dashboard initialized successfully</p>
+                            <div class="activity-time">Just now</div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Generate activities from recent systems
+            const activities = [];
+            
+            // Add system creation activities
+            ratingSystems.slice(-3).reverse().forEach(system => {
+                activities.push({
+                    type: 'system',
+                    title: 'New System Created',
+                    description: `${system.systemName} was created`,
+                    time: formatTimeAgo(new Date(system.createdAt)),
+                    icon: 'fas fa-layer-group',
+                    color: 'system'
+                });
+            });
+            
+            // Add feedback submission activities
+            let feedbackCount = 0;
+            ratingSystems.forEach(system => {
+                if (system.ratings) {
+                    Object.values(system.ratings).forEach(session => {
+                        if (session.studentFeedback && session.studentFeedback.length > 0) {
+                            feedbackCount += session.studentFeedback.length;
+                        }
+                    });
+                }
+            });
+            
+            if (feedbackCount > 0) {
+                activities.unshift({
+                    type: 'feedback',
+                    title: 'New Feedback Received',
+                    description: `${feedbackCount} new feedback submissions`,
+                    time: 'Recently',
+                    icon: 'fas fa-comment-alt',
+                    color: 'feedback'
+                });
+            }
+            
+            activityList.innerHTML = activities.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-icon ${activity.color}">
+                        <i class="${activity.icon}"></i>
+                    </div>
+                    <div class="activity-content">
+                        <h4>${activity.title}</h4>
+                        <p>${activity.description}</p>
+                        <div class="activity-time">${activity.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update top instructors
+        function updateTopInstructors() {
+            const instructorsList = document.getElementById('instructorsList');
+            
+            // Get all instructors with their ratings
+            const instructorRatings = {};
+            
+            ratingSystems.forEach(system => {
+                if (system.instructors && system.ratings) {
+                    system.instructors.forEach(instructor => {
+                        if (!instructorRatings[instructor.code]) {
+                            instructorRatings[instructor.code] = {
+                                name: instructor.name,
+                                ratings: [],
+                                totalSessions: 0
+                            };
+                        }
+                        
+                        // Collect all ratings for this instructor
+                        Object.values(system.ratings).forEach(session => {
+                            if (session.instructorRatings && session.instructorRatings[instructor.code]) {
+                                const rating = session.instructorRatings[instructor.code];
+                                if (rating > 0) {
+                                    instructorRatings[instructor.code].ratings.push(rating);
+                                    instructorRatings[instructor.code].totalSessions++;
+                                }
+                            }
+                        });
+                    });
+                }
+            });
+            
+            // Calculate average ratings and sort
+            const rankedInstructors = Object.values(instructorRatings)
+                .filter(instructor => instructor.ratings.length > 0)
+                .map(instructor => ({
+                    ...instructor,
+                    averageRating: instructor.ratings.reduce((a, b) => a + b, 0) / instructor.ratings.length
+                }))
+                .sort((a, b) => b.averageRating - a.averageRating)
+                .slice(0, 5); // Top 5
+            
+            if (rankedInstructors.length === 0) {
+                instructorsList.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: var(--gray);">
+                        <i class="fas fa-chalkboard-teacher" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                        <p>No instructor ratings available yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            instructorsList.innerHTML = rankedInstructors.map((instructor, index) => `
+                <div class="instructor-item">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%234A6FFF'/><text x='50' y='60' font-family='Arial' font-size='40' fill='white' text-anchor='middle'>${instructor.name.charAt(0)}</text></svg>" 
+                         alt="${instructor.name}" class="instructor-avatar">
+                    <div class="instructor-info">
+                        <h4>${instructor.name}</h4>
+                        <p>${instructor.totalSessions} sessions</p>
+                    </div>
+                    <div class="instructor-rating">
+                        <i class="fas fa-star"></i>
+                        <span>${instructor.averageRating.toFixed(1)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Format time ago
+        function formatTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins} min ago`;
+            if (diffHours < 24) return `${diffHours} hours ago`;
+            if (diffDays < 7) return `${diffDays} days ago`;
+            return date.toLocaleDateString();
+        }
+
+        // Update date display
+        function updateDateDisplay() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // Change chart view
+        function changeChartView(view) {
+            chartView = view;
+            
+            // Update active button
+            document.querySelectorAll('.chart-card:first-child .period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update chart
+            updateRatingChart();
+        }
+
+        // Change feedback view
+        function changeFeedbackView(view) {
+            feedbackView = view;
+            
+            // Update active button
+            document.querySelectorAll('.chart-card:last-child .period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update chart
+            updateFeedbackChart();
+        }
+
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // View system
+        function viewSystem(systemName) {
+            // Redirect to rating page with system view
+            sessionStorage.setItem('viewSystem', systemName);
+            window.location.href = 'ratingandfeedback.html';
+        }
+
+        // Show notifications
+        function showNotifications() {
+            const notificationCount = document.getElementById('notificationCount').textContent;
+            if (notificationCount > 0) {
+                showToast(`You have ${notificationCount} new notifications`, 'success');
+            } else {
+                showToast('No new notifications', 'info');
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('currentUser');
+                sessionStorage.clear();
+                showToast('Logged out successfully', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            }
+        }
+
+        // Setup real-time updates
+        function setupRealTimeUpdates() {
+            // Auto-refresh data every 10 seconds
+            setInterval(() => {
+                loadRatingSystems();
+            }, 10000);
+            
+            // Update date every minute
+            setInterval(() => {
+                updateDateDisplay();
+            }, 60000);
+            
+            // Update notification count randomly (for demo)
+            setInterval(() => {
+                const currentCount = parseInt(document.getElementById('notificationCount').textContent);
+                const hasNewData = checkForNewData();
+                
+                if (hasNewData) {
+                    const newCount = currentCount + 1;
+                    document.getElementById('notificationCount').textContent = newCount;
+                }
+            }, 15000);
+        }
+
+        // Check for new data
+        function checkForNewData() {
+            // In a real app, you would check with server
+            // For demo, return random true/false
+            return Math.random() > 0.7;
+        }
+
+        // Handle storage changes (for cross-page updates)
+        function handleStorageChange(e) {
+            if (e.key === 'ratingSystems') {
+                loadRatingSystems();
+                showToast('Data updated from another tab', 'info');
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + D for dashboard
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                window.location.href = 'Admindashboard.html';
+            }
+            
+            // Ctrl/Cmd + R for rating page
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                window.location.href = 'ratingandfeedback.html';
+            }
+            
+            // Escape to close sidebar on mobile
+            if (e.key === 'Escape' && window.innerWidth <= 768) {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

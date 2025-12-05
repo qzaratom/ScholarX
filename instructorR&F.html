@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Management - ScholarX Instructor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4A6FFF;
+            --primary-dark: #3A5BDF;
+            --secondary: #1A1F36;
+            --accent: #00C9B7;
+            --light: #F8FAFC;
+            --gray-light: #E2E8F0;
+            --gray: #94A3B8;
+            --gray-dark: #64748B;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --sidebar-width: 260px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #F8FAFC;
+            color: #334155;
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--secondary) 0%, #0F172A 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .app-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .instructor-badge {
+            background: rgba(74, 111, 255, 0.15);
+            color: var(--primary);
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 24px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: var(--transition);
+            margin: 4px 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: calc(100% - 24px);
+            text-align: left;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: rgba(74, 111, 255, 0.15);
+            color: white;
+            border-left: 4px solid var(--primary);
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .profile-pic {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+        }
+
+        .profile-info h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .profile-info p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .logout-btn {
+            width: 100%;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 30px;
+            transition: var(--transition);
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .page-title h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .page-title p {
+            color: var(--gray-dark);
+            font-size: 16px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 16px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(74, 111, 255, 0.25);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(74, 111, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--secondary);
+            border: 1px solid var(--gray-light);
+        }
+
+        .btn-secondary:hover {
+            background: var(--light);
+            border-color: var(--gray);
+        }
+
+        /* Stats Cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+        }
+
+        .stat-icon.system {
+            background: linear-gradient(135deg, var(--primary) 0%, #6C8BFF 100%);
+        }
+
+        .stat-icon.session {
+            background: linear-gradient(135deg, var(--accent) 0%, #2CE0D0 100%);
+        }
+
+        .stat-icon.points {
+            background: linear-gradient(135deg, var(--success) 0%, #22C55E 100%);
+        }
+
+        .stat-icon.feedback {
+            background: linear-gradient(135deg, var(--warning) 0%, #FBBF24 100%);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--gray-dark);
+            font-weight: 500;
+        }
+
+        /* Login Section - Made more compact */
+        .login-section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .welcome-card {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .welcome-icon {
+            font-size: 48px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .welcome-card h2 {
+            font-size: 22px;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .welcome-card p {
+            color: var(--gray-dark);
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 111, 255, 0.1);
+        }
+
+        .error-message {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 15px;
+            display: none;
+            font-size: 13px;
+            border-left: 4px solid var(--danger);
+        }
+
+        .success-message {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 15px;
+            display: none;
+            font-size: 13px;
+            border-left: 4px solid var(--success);
+        }
+
+        /* Sessions Management */
+        .sessions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .session-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-light);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .session-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .session-card.locked::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--gray);
+        }
+
+        .session-card.unlocked::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--success);
+        }
+
+        .session-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .session-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 4px;
+        }
+
+        .session-number {
+            font-size: 12px;
+            color: var(--gray-dark);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .session-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 20px;
+        }
+
+        .session-badge.locked {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--gray-dark);
+        }
+
+        .session-badge.unlocked {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .session-details {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            min-width: 60px;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .detail-label {
+            font-size: 11px;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .session-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-sm {
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 6px;
+            flex: 1;
+            min-width: 60px;
+        }
+
+        .btn-unlock {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-lock {
+            background: var(--gray);
+            color: white;
+        }
+
+        .btn-view {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-unlock:disabled,
+        .btn-lock:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Compact Feedback Modal (A4 Landscape: 297x210mm ~ 1123x794px) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 900px; /* Reduced from 1200px to fit better */
+            max-height: 85vh; /* Reduced height */
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--gray-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--gray);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-modal:hover {
+            color: var(--danger);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        /* Compact Session Tabs */
+        .session-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 5px;
+        }
+
+        .session-tab {
+            padding: 8px 14px;
+            background: var(--light);
+            border: 2px solid var(--gray-light);
+            border-radius: 6px;
+            font-weight: 600;
+            color: var(--gray-dark);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .session-tab:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .session-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* Compact Feedback List */
+        .feedback-list {
+            max-height: 400px; /* Reduced from 500px */
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .feedback-item {
+            background: var(--light);
+            border-radius: var(--radius-sm);
+            padding: 15px;
+            margin-bottom: 12px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .feedback-student {
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 14px;
+        }
+
+        .feedback-rating {
+            color: #FF9529;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .feedback-text {
+            color: var(--secondary);
+            line-height: 1.5;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .feedback-date {
+            font-size: 11px;
+            color: var(--gray);
+            margin-bottom: 12px;
+        }
+
+        .reply-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--gray-light);
+        }
+
+        .reply-form {
+            margin-top: 12px;
+            display: none;
+        }
+
+        .reply-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            min-height: 60px;
+            resize: vertical;
+            margin-bottom: 8px;
+        }
+
+        .reply-item {
+            background: white;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            border: 1px solid var(--gray-light);
+        }
+
+        .reply-header {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .reply-text {
+            color: var(--secondary);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .reply-date {
+            font-size: 10px;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+
+        /* Compact Chat Thread Modal */
+        .chat-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            backdrop-filter: blur(4px);
+        }
+
+        .chat-modal.active {
+            display: flex;
+        }
+
+        .chat-modal-content {
+            background: white;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 500px; /* Compact size */
+            max-height: 70vh; /* Reduced height */
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--gray-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            font-size: 16px;
+            color: var(--secondary);
+        }
+
+        .chat-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-message {
+            max-width: 80%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .chat-message.student {
+            align-self: flex-start;
+            background: var(--light);
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-message.instructor {
+            align-self: flex-end;
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-meta {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 3px;
+        }
+
+        .chat-footer {
+            padding: 15px;
+            border-top: 1px solid var(--gray-light);
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+        }
+
+        .chat-send {
+            padding: 10px 18px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            color: var(--gray-light);
+            margin-bottom: 15px;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gray-dark);
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            max-width: 300px;
+            margin: 0 auto 20px;
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--secondary);
+            color: white;
+            padding: 12px 18px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 3000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: var(--transition);
+            max-width: 350px;
+            font-size: 14px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1001;
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            font-size: 18px;
+            color: var(--secondary);
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .sessions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .session-actions {
+                flex-direction: row;
+            }
+            
+            .modal-content {
+                max-width: 95%;
+                max-height: 90vh;
+            }
+            
+            .chat-modal-content {
+                max-width: 95%;
+                max-height: 85vh;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .stat-card {
+                padding: 20px;
+            }
+            
+            .stat-value {
+                font-size: 28px;
+            }
+            
+            .login-section {
+                padding: 20px;
+            }
+            
+            .session-tabs {
+                max-height: 100px;
+            }
+            
+            .session-tab {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .main-content {
+                padding: 15px;
+            }
+            
+            .page-title h1 {
+                font-size: 24px;
+            }
+            
+            .btn {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+            
+            .session-details {
+                gap: 10px;
+            }
+            
+            .detail-item {
+                min-width: 50px;
+            }
+            
+            .detail-value {
+                font-size: 14px;
+            }
+        }
+  /* New styles for line charts */
+        .chart-container {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .chart-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 10px;
+            background: var(--light);
+            border-radius: var(--radius-sm);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .student-name {
+            font-weight: 500;
+            color: var(--secondary);
+        }
+        
+        .rating-value {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        /* Add to existing styles */
+        .ratings-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .ratings-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .ratings-card .stat-value {
+            font-size: 28px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="logo.png" alt="ScholarX Logo" class="app-logo">
+            <div>
+                <div class="app-name">ScholarX</div>
+                <div class="instructor-badge">Instructor Portal</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <button class="nav-item" onclick="navigateToInstructorDashboard()">
+                <i class="fas fa-chart-line"></i>
+                <span>Instructor Dashboard</span>
+            </button>
+            <button class="nav-item active" onclick="navigateToRatingManagement()">
+                <i class="fas fa-star"></i>
+                <span>Rating & Feedback</span>
+            </button>
+            <button class="nav-item" onclick="navigateToLearningHub()">
+                <i class="fas fa-book-open"></i>
+                <span>Learning HUB</span>
+            </button>
+            <button class="nav-item" onclick="navigateToSettings()">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <img id="profilePicture" src="default-instructor.png" alt="Profile" class="profile-pic">
+                <div class="profile-info">
+                    <h4 id="instructorName">Not Logged In</h4>
+                    <p id="instructorRole">Select System</p>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logoutInstructor()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Login Interface -->
+        <div id="loginInterface">
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>Instructor Session Manager</h1>
+                    <p>Access and manage your course sessions and student feedback</p>
+                </div>
+            </div>
+
+            <div class="login-section">
+                <div class="welcome-card">
+                    <div class="welcome-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <h2>Welcome to ScholarX Instructor Rating & Feedback Portal</h2>
+                    <p>Please select your course system and enter your instructor code to continue</p>
+                </div>
+
+                <div class="error-message" id="errorMessage"></div>
+                <div class="success-message" id="successMessage"></div>
+
+                <div class="form-group">
+                    <label class="form-label">Select Rating System *</label>
+                    <select id="systemSelect" class="form-control">
+                        <option value="">-- Select a System --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Instructor Passcode *</label>
+                    <input type="password" id="codeInput" class="form-control" placeholder="Enter your instructor passcode">
+                    <small style="color: var(--gray); display: block; margin-top: 6px; font-size: 12px;">
+                        <i class="fas fa-info-circle"></i> Your instructor passcode was provided by your administrator
+                    </small>
+                </div>
+
+                <button class="btn btn-primary" onclick="loginInstructor()" style="width: 100%; padding: 14px;">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Access System</span>
+                </button>
+
+                <div style="text-align: center; margin-top: 15px; color: var(--gray); font-size: 13px;">
+                    <p>Need help? Contact your administrator</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session Management Interface -->
+        <div id="sessionManagement" style="display: none;">
+            <div class="page-header">
+                <div class="page-title">
+                    <h1 id="systemTitle">System Name</h1>
+                    <p id="courseName">Course Name</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="openFeedbackModal()">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>View Feedback Analytics</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-container" id="statsContainer">
+                <!-- Stats populated by JavaScript -->
+            </div>
+
+            <!-- Ratings Overview with Line Graphs -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3 class="chart-title">Student Rating Trends</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="chartFilter" class="form-control" style="width: auto; padding: 8px 12px; font-size: 13px;" onchange="updateChart()">
+                            <option value="all">All Sessions</option>
+                            <option value="last5">Last 5 Sessions</option>
+                            <option value="last3">Last 3 Sessions</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="ratingsChart"></canvas>
+                </div>
+                <div class="chart-legend" id="chartLegend">
+                    <!-- Legend populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Sessions Grid -->
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 20px; color: var(--secondary); margin-bottom: 8px;">Course Sessions</h2>
+                <p style="color: var(--gray-dark); font-size: 14px;">Manage session access for students</p>
+            </div>
+
+            <div class="sessions-grid" id="sessionsContainer">
+                <!-- Sessions populated by JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Compact Feedback Modal -->
+    <div id="feedbackModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Feedback Analytics</h2>
+                <button class="close-modal" onclick="closeFeedbackModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="session-tabs" id="sessionTabs">
+                    <!-- Session tabs populated by JavaScript -->
+                </div>
+                
+                <div id="feedbackContent">
+                    <!-- Feedback content populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Operation completed successfully!</span>
+    </div>
+
+    <script>
+        // Global variables
+        let ratingSystems = [];
+        let currentInstructor = null;
+        let currentSystemIndex = null;
+        let currentSessionIndex = 0;
+        let ratingsChart = null;
+        let userProfileData = {
+            name: '',
+            profilePic: 'default-instructor.png',
+            role: 'Instructor'
+        };
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load rating systems
+            ratingSystems = JSON.parse(localStorage.getItem('ratingSystems') || '[]');
+            
+            // Load user profile from all connected pages
+            loadUserProfile();
+            
+            // Check for existing session - BUT DO NOT AUTO-LOGIN
+            // We'll only show login interface initially
+            const sessionData = JSON.parse(sessionStorage.getItem('instructorSession') || 'null');
+            
+            // Only auto-login if there's a valid session AND the user explicitly wants it
+            // But for security, we'll always show login first
+            // Remove auto-login to enforce passcode entry
+            
+            // Populate system select
+            populateSystemSelect();
+            
+            // Setup mobile menu toggle
+            document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                const sidebar = document.getElementById('sidebar');
+                const menuToggle = document.getElementById('menuToggle');
+                
+                if (window.innerWidth <= 768 && 
+                    !sidebar.contains(event.target) && 
+                    !menuToggle.contains(event.target) && 
+                    sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                }
+            });
+            
+            // Enter key to submit login form
+            document.getElementById('codeInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loginInstructor();
+                }
+            });
+            
+            // Initialize with login interface
+            document.getElementById('loginInterface').style.display = 'block';
+            document.getElementById('sessionManagement').style.display = 'none';
+        });
+
+        // Load user profile from all connected HTML pages
+        function loadUserProfile() {
+            // Try to get profile from localStorage (shared across pages)
+            const savedProfile = JSON.parse(localStorage.getItem('instructorProfile') || 'null');
+            
+            if (savedProfile) {
+                userProfileData = savedProfile;
+            } else {
+                // Try to get from sessionStorage (current session)
+                const sessionData = JSON.parse(sessionStorage.getItem('instructorSession') || 'null');
+                if (sessionData && sessionData.instructor) {
+                    userProfileData.name = sessionData.instructor.name;
+                    userProfileData.role = 'Instructor';
+                }
+            }
+            
+            // Update sidebar profile
+            updateProfileSidebar();
+        }
+
+        // Update profile in sidebar
+        function updateProfileSidebar() {
+            document.getElementById('instructorName').textContent = userProfileData.name || 'Not Logged In';
+            document.getElementById('instructorRole').textContent = userProfileData.role || 'Select System';
+            
+            // Update profile picture if available
+            if (userProfileData.profilePic) {
+                document.getElementById('profilePicture').src = userProfileData.profilePic;
+            }
+        }
+
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Navigation functions
+        function navigateToInstructorDashboard() { 
+            // Save current state before navigating
+            saveUserProfile();
+            window.location.href = 'instructordashboard.html'; 
+        }
+        
+        function navigateToRatingManagement() { 
+            // Already on this page
+        }
+        
+        function navigateToLearningHub() { 
+            saveUserProfile();
+            window.location.href = 'instructorLH.html'; 
+        }
+        
+        function navigateToSettings() { 
+            saveUserProfile();
+            window.location.href = 'settingI.html'; 
+        }
+
+        // Save user profile to localStorage for sharing across pages
+        function saveUserProfile() {
+            if (currentInstructor) {
+                userProfileData.name = currentInstructor.name;
+                userProfileData.role = `${ratingSystems[currentSystemIndex].courseName} Instructor`;
+                
+                // Try to get profile picture from other pages
+                const dashboardProfile = JSON.parse(localStorage.getItem('dashboardProfile') || 'null');
+                const settingsProfile = JSON.parse(localStorage.getItem('settingsProfile') || 'null');
+                
+                if (settingsProfile && settingsProfile.profilePic) {
+                    userProfileData.profilePic = settingsProfile.profilePic;
+                } else if (dashboardProfile && dashboardProfile.profilePic) {
+                    userProfileData.profilePic = dashboardProfile.profilePic;
+                }
+                
+                localStorage.setItem('instructorProfile', JSON.stringify(userProfileData));
+            }
+        }
+
+        // Populate system select dropdown
+        function populateSystemSelect() {
+            const select = document.getElementById('systemSelect');
+            select.innerHTML = '<option value="">-- Select a System --</option>';
+            
+            ratingSystems.forEach((system, index) => {
+                // Only show systems that have instructors
+                if (system.instructors && system.instructors.length > 0) {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `${system.systemName} - ${system.courseName}`;
+                    select.appendChild(option);
+                }
+            });
+            
+            if (ratingSystems.length === 0) {
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "No rating systems available";
+                option.disabled = true;
+                select.appendChild(option);
+            }
+        }
+
+        // Get session status from localStorage
+        function getSessionStatus(systemIndex) {
+            const sessionStatus = JSON.parse(localStorage.getItem('sessionStatus') || '{}');
+            return sessionStatus[systemIndex] || {};
+        }
+
+        // Save session status to localStorage
+        function saveSessionStatus(systemIndex, sessionIndex, isUnlocked) {
+            const sessionStatus = JSON.parse(localStorage.getItem('sessionStatus') || '{}');
+            if (!sessionStatus[systemIndex]) sessionStatus[systemIndex] = {};
+            sessionStatus[systemIndex][sessionIndex] = isUnlocked;
+            localStorage.setItem('sessionStatus', JSON.stringify(sessionStatus));
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            toast.className = 'toast' + (type === 'error' ? ' error' : '');
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Login instructor - ENFORCED PASSCODE ENTRY
+        function loginInstructor() {
+            const systemIndex = document.getElementById('systemSelect').value;
+            const code = document.getElementById('codeInput').value.trim();
+            const errorMsg = document.getElementById('errorMessage');
+            const successMsg = document.getElementById('successMessage');
+            
+            // Hide messages
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+            
+            // Validation
+            if (!systemIndex) {
+                errorMsg.textContent = 'Please select a rating system';
+                errorMsg.style.display = 'block';
+                return;
+            }
+            
+            if (!code) {
+                errorMsg.textContent = 'Please enter your instructor passcode';
+                errorMsg.style.display = 'block';
+                return;
+            }
+            
+            const system = ratingSystems[systemIndex];
+            
+            // Find instructor in system
+            const instructor = system.instructors.find(i => i.code.toLowerCase() === code.toLowerCase());
+            
+            if (!instructor) {
+                errorMsg.textContent = 'Invalid instructor passcode for this system. Please check your code and try again.';
+                errorMsg.style.display = 'block';
+                return;
+            }
+            
+            // Clear any existing rating data from previous sessions
+            clearPreviousRatingData();
+            
+            // Set current instructor and system
+            currentInstructor = instructor;
+            currentSystemIndex = parseInt(systemIndex);
+            
+            // Save to session storage
+            sessionStorage.setItem('instructorSession', JSON.stringify({
+                systemIndex: currentSystemIndex,
+                instructor: instructor
+            }));
+            
+            // Update user profile
+            userProfileData.name = instructor.name;
+            userProfileData.role = `${system.courseName} Instructor`;
+            updateProfileSidebar();
+            saveUserProfile();
+            
+            // Update UI
+            showSessionManagement(system);
+            
+            // Show success message
+            successMsg.textContent = `Welcome back, ${instructor.name}!`;
+            successMsg.style.display = 'block';
+            
+            // Clear form
+            document.getElementById('codeInput').value = '';
+            
+            // Show toast
+            showToast(`Logged in as ${instructor.name}`, 'success');
+        }
+
+        // Clear previous rating data to ensure fresh start
+        function clearPreviousRatingData() {
+            // We don't clear actual feedback data, just ensure no auto-login
+            // This ensures passcode is always required
+        }
+
+        // Show session management interface
+        function showSessionManagement(system) {
+            // Update page title
+            document.getElementById('systemTitle').textContent = system.systemName;
+            document.getElementById('courseName').textContent = system.courseName;
+            
+            // Switch interfaces
+            document.getElementById('loginInterface').style.display = 'none';
+            document.getElementById('sessionManagement').style.display = 'block';
+            
+            // Load data
+            loadSessionManagement(system);
+            
+            // Initialize chart
+            initializeRatingsChart(system);
+        }
+
+        // Load session management data
+        function loadSessionManagement(system) {
+            // Calculate stats
+            const totalSessions = system.sessions.length;
+            const status = getSessionStatus(currentSystemIndex);
+            const unlockedSessions = Object.values(status).filter(v => v === true).length;
+            
+            // Get feedback data
+            const allFeedback = JSON.parse(localStorage.getItem('studentFeedback') || '[]');
+            const systemFeedback = allFeedback.filter(f => f.systemName === system.systemName);
+            const totalPoints = systemFeedback.reduce((sum, fb) => sum + (fb.rating || 0), 0);
+            const feedbackCount = systemFeedback.length;
+            
+            // Update stats
+            document.getElementById('statsContainer').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value">${totalSessions}</div>
+                            <div class="stat-label">Total Sessions</div>
+                        </div>
+                        <div class="stat-icon session">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value">${unlockedSessions}</div>
+                            <div class="stat-label">Unlocked Sessions</div>
+                        </div>
+                        <div class="stat-icon system">
+                            <i class="fas fa-lock-open"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value">${totalPoints}</div>
+                            <div class="stat-label">Total Points</div>
+                        </div>
+                        <div class="stat-icon points">
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div>
+                            <div class="stat-value">${feedbackCount}</div>
+                            <div class="stat-label">Feedback Received</div>
+                        </div>
+                        <div class="stat-icon feedback">
+                            <i class="fas fa-comment-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Render sessions
+            renderSessions(system);
+        }
+
+        // Initialize ratings line chart
+        function initializeRatingsChart(system) {
+            const ctx = document.getElementById('ratingsChart').getContext('2d');
+            
+            // Get all feedback for this system
+            const allFeedback = JSON.parse(localStorage.getItem('studentFeedback') || '[]');
+            const systemFeedback = allFeedback.filter(f => f.systemName === system.systemName);
+            
+            // Group feedback by student and session
+            const studentRatings = {};
+            
+            systemFeedback.forEach(feedback => {
+                if (!studentRatings[feedback.studentReg]) {
+                    studentRatings[feedback.studentReg] = {};
+                }
+                studentRatings[feedback.studentReg][feedback.sessionIndex] = feedback.rating;
+            });
+            
+            // Prepare data for chart
+            const sessions = system.sessions;
+            const students = Object.keys(studentRatings);
+            
+            // Generate colors for each student
+            const colors = generateColors(students.length);
+            
+            const datasets = students.map((student, index) => {
+                const dataPoints = sessions.map((session, sessionIndex) => {
+                    return studentRatings[student][sessionIndex] || null;
+                });
+                
+                return {
+                    label: student,
+                    data: dataPoints,
+                    borderColor: colors[index],
+                    backgroundColor: colors[index] + '20',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: false,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                };
+            });
+            
+            // Destroy existing chart if it exists
+            if (ratingsChart) {
+                ratingsChart.destroy();
+            }
+            
+            // Create line chart
+            ratingsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sessions.map((s, i) => `Session ${i+1}`),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false // We'll use custom legend
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y}/5`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5,
+                            title: {
+                                display: true,
+                                text: 'Rating (1-5)'
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Sessions'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Update legend
+            updateChartLegend(students, colors, studentRatings, sessions);
+        }
+
+        // Generate distinct colors for charts
+        function generateColors(count) {
+            const colors = [
+                '#4A6FFF', '#00C9B7', '#10B981', '#F59E0B', '#EF4444',
+                '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16', '#F97316'
+            ];
+            
+            // If we need more colors than available, generate random ones
+            if (count <= colors.length) {
+                return colors.slice(0, count);
+            }
+            
+            // Generate additional colors
+            const additionalColors = [];
+            for (let i = colors.length; i < count; i++) {
+                const hue = (i * 137.508) % 360; // Golden angle
+                additionalColors.push(`hsl(${hue}, 70%, 60%)`);
+            }
+            
+            return colors.concat(additionalColors);
+        }
+
+        // Update chart legend with student names and ratings
+        function updateChartLegend(students, colors, studentRatings, sessions) {
+            const legendContainer = document.getElementById('chartLegend');
+            legendContainer.innerHTML = '';
+            
+            // Get current filter
+            const filter = document.getElementById('chartFilter').value;
+            let displaySessions = sessions;
+            
+            if (filter === 'last5' && sessions.length > 5) {
+                displaySessions = sessions.slice(-5);
+            } else if (filter === 'last3' && sessions.length > 3) {
+                displaySessions = sessions.slice(-3);
+            }
+            
+            students.forEach((student, index) => {
+                // Calculate average rating for this student
+                const ratings = Object.values(studentRatings[student] || {});
+                const avgRating = ratings.length > 0 
+                    ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+                    : 'N/A';
+                
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.innerHTML = `
+                    <div class="legend-color" style="background-color: ${colors[index]}"></div>
+                    <span class="student-name">${student}</span>
+                    <span class="rating-value">Avg: ${avgRating}/5</span>
+                `;
+                legendContainer.appendChild(legendItem);
+            });
+            
+            // Add "No data" indicator if no students
+            if (students.length === 0) {
+                legendContainer.innerHTML = `
+                    <div style="text-align: center; width: 100%; color: var(--gray);">
+                        <i class="fas fa-chart-line"></i>
+                        <p>No student ratings available yet</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Update chart based on filter
+        function updateChart() {
+            if (currentSystemIndex !== null && ratingsChart) {
+                const system = ratingSystems[currentSystemIndex];
+                initializeRatingsChart(system);
+            }
+        }
+
+        // Render sessions grid
+        function renderSessions(system) {
+            const container = document.getElementById('sessionsContainer');
+            const status = getSessionStatus(currentSystemIndex);
+            
+            if (system.sessions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="empty-icon">
+                            <i class="fas fa-calendar-times"></i>
+                        </div>
+                        <h3>No Sessions Available</h3>
+                        <p>This system doesn't have any sessions configured yet.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            system.sessions.forEach((session, index) => {
+                const isUnlocked = status[index] === true;
+                const sessionFeedback = getSessionFeedback(system.systemName, index);
+                const avgRating = sessionFeedback.length > 0 
+                    ? (sessionFeedback.reduce((sum, fb) => sum + fb.rating, 0) / sessionFeedback.length).toFixed(1)
+                    : 0;
+                
+                // Truncate long session names
+                const displaySession = session.length > 30 ? session.substring(0, 30) + '...' : session;
+                
+                const card = document.createElement('div');
+                card.className = `session-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+                card.innerHTML = `
+                    <div class="session-header">
+                        <div>
+                            <h3 title="${session}">${displaySession}</h3>
+                            <div class="session-number">
+                                <i class="fas fa-hashtag"></i>
+                                <span>Session ${index + 1}</span>
+                            </div>
+                        </div>
+                        <div class="session-badge ${isUnlocked ? 'unlocked' : 'locked'}" title="${isUnlocked ? 'Session is open for students' : 'Session is closed'}">
+                            ${isUnlocked ? '<i class="fas fa-lock-open"></i>' : '<i class="fas fa-lock"></i>'}
+                        </div>
+                    </div>
+                    
+                    <div class="session-details">
+                        <div class="detail-item">
+                            <div class="detail-value">${sessionFeedback.length}</div>
+                            <div class="detail-label">Feedbacks</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-value">${avgRating}</div>
+                            <div class="detail-label">Avg Rating</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-value">${isUnlocked ? 'Open' : 'Closed'}</div>
+                            <div class="detail-label">Status</div>
+                        </div>
+                    </div>
+                    
+                    <div class="session-actions">
+                        <button class="btn btn-sm btn-unlock" onclick="toggleSession(${index}, true)" ${isUnlocked ? 'disabled' : ''} title="Unlock session for students">
+                            <i class="fas fa-lock-open"></i>
+                            Unlock
+                        </button>
+                        <button class="btn btn-sm btn-lock" onclick="toggleSession(${index}, false)" ${!isUnlocked ? 'disabled' : ''} title="Lock session">
+                            <i class="fas fa-lock"></i>
+                            Lock
+                        </button>
+                        <button class="btn btn-sm btn-view" onclick="viewSessionFeedback(${index})" title="View student feedback">
+                            <i class="fas fa-eye"></i>
+                            View
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // Get feedback for a specific session
+        function getSessionFeedback(systemName, sessionIndex) {
+            const allFeedback = JSON.parse(localStorage.getItem('studentFeedback') || '[]');
+            return allFeedback.filter(f => f.systemName === systemName && f.sessionIndex === sessionIndex);
+        }
+
+        // Toggle session lock/unlock
+        function toggleSession(sessionIndex, unlock) {
+            const system = ratingSystems[currentSystemIndex];
+            const sessionName = system.sessions[sessionIndex];
+            
+            // Save status
+            saveSessionStatus(currentSystemIndex, sessionIndex, unlock);
+            
+            // Show toast
+            showToast(`Session "${sessionName}" ${unlock ? 'unlocked' : 'locked'} successfully`, 'success');
+            
+            // Refresh UI
+            loadSessionManagement(system);
+        }
+
+        // View session feedback
+        function viewSessionFeedback(sessionIndex) {
+            currentSessionIndex = sessionIndex;
+            openFeedbackModal();
+        }
+
+        // Open feedback modal
+        function openFeedbackModal() {
+            const system = ratingSystems[currentSystemIndex];
+            
+            // Build session tabs
+            const tabsContainer = document.getElementById('sessionTabs');
+            tabsContainer.innerHTML = '';
+            
+            system.sessions.forEach((session, index) => {
+                const tab = document.createElement('button');
+                tab.className = `session-tab ${index === currentSessionIndex ? 'active' : ''}`;
+                // Truncate for compact display
+                const tabText = session.length > 15 ? session.substring(0, 15) + '...' : session;
+                tab.textContent = `${index + 1}. ${tabText}`;
+                tab.title = session;
+                tab.onclick = () => {
+                    currentSessionIndex = index;
+                    loadFeedbackForSession(index);
+                    // Update active tab
+                    document.querySelectorAll('.session-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                };
+                tabsContainer.appendChild(tab);
+            });
+            
+            // Load initial feedback
+            loadFeedbackForSession(currentSessionIndex);
+            
+            // Show modal
+            document.getElementById('feedbackModal').classList.add('active');
+        }
+
+        // Load feedback for a specific session
+        function loadFeedbackForSession(sessionIndex) {
+            const system = ratingSystems[currentSystemIndex];
+            const feedback = getSessionFeedback(system.systemName, sessionIndex);
+            const replies = JSON.parse(localStorage.getItem('instructorReplies') || '{}');
+            
+            const content = document.getElementById('feedbackContent');
+            
+            if (feedback.length === 0) {
+                content.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-comment-slash"></i>
+                        </div>
+                        <h3>No Feedback Yet</h3>
+                        <p>No students have submitted feedback for this session yet.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Calculate session statistics
+            const totalPoints = feedback.reduce((sum, fb) => sum + fb.rating, 0);
+            const avgRating = (totalPoints / feedback.length).toFixed(1);
+            
+            // Get top students for this session
+            const topStudents = [...feedback]
+                .sort((a, b) => b.rating - a.rating)
+                .slice(0, 5)
+                .map(fb => `${fb.studentReg} (${fb.rating}/5)`);
+            
+            let html = `
+                <div style="margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div style="background: var(--light); padding: 12px; border-radius: var(--radius-sm); min-width: 120px;">
+                        <div style="font-size: 11px; color: var(--gray); margin-bottom: 4px;">Total Feedback</div>
+                        <div style="font-size: 20px; font-weight: 700; color: var(--primary);">${feedback.length}</div>
+                    </div>
+                    <div style="background: var(--light); padding: 12px; border-radius: var(--radius-sm); min-width: 120px;">
+                        <div style="font-size: 11px; color: var(--gray); margin-bottom: 4px;">Average Rating</div>
+                        <div style="font-size: 20px; font-weight: 700; color: var(--accent);">${avgRating}/5.0</div>
+                    </div>
+                    <div style="background: var(--light); padding: 12px; border-radius: var(--radius-sm); min-width: 120px;">
+                        <div style="font-size: 11px; color: var(--gray); margin-bottom: 4px;">Total Points</div>
+                        <div style="font-size: 20px; font-weight: 700; color: var(--success);">${totalPoints}</div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <div style="font-size: 14px; font-weight: 600; color: var(--secondary); margin-bottom: 8px;">
+                        <i class="fas fa-crown"></i> Top Students in This Session
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        ${topStudents.map(student => `
+                            <div style="background: var(--primary); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px;">
+                                ${student}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 15px; height: 150px;">
+                    <canvas id="feedbackChart" height="150"></canvas>
+                </div>
+                
+                <div class="feedback-list">
+            `;
+            
+            // Add each feedback item
+            feedback.forEach((fb, fbIndex) => {
+                const feedbackId = `${currentSystemIndex}-${sessionIndex}-${fb.studentReg}`;
+                const feedbackReplies = replies[feedbackId] || [];
+                
+                // Generate star rating
+                const stars = '★'.repeat(fb.rating) + '☆'.repeat(5 - fb.rating);
+                
+                html += `
+                    <div class="feedback-item">
+                        <div class="feedback-header">
+                            <span class="feedback-student">${fb.studentReg}</span>
+                            <span class="feedback-rating">${stars} (${fb.rating}/5)</span>
+                        </div>
+                        <div class="feedback-date">
+                            <i class="far fa-clock"></i> ${new Date(fb.submittedAt).toLocaleString()}
+                        </div>
+                        <div class="feedback-text">${fb.feedback || 'No written feedback provided'}</div>
+                        
+                        ${feedbackReplies.length > 0 ? `
+                            <div class="reply-section">
+                                <div style="font-size: 13px; color: var(--secondary); margin-bottom: 8px; font-weight: 600;">
+                                    <i class="fas fa-reply"></i> Instructor Replies (${feedbackReplies.length})
+                                </div>
+                        ` : ''}
+                        
+                        ${feedbackReplies.map(reply => `
+                            <div class="reply-item">
+                                <div class="reply-header">
+                                    <i class="fas fa-user-tie"></i> ${reply.instructorName || currentInstructor.name}
+                                </div>
+                                <div class="reply-text">${reply.reply}</div>
+                                <div class="reply-date">
+                                    ${new Date(reply.repliedAt).toLocaleString()}
+                                </div>
+                            </div>
+                        `).join('')}
+                        
+                        ${feedbackReplies.length > 0 ? `</div>` : ''}
+                        
+                        <div style="margin-top: 10px;">
+                            <button class="btn btn-sm" onclick="showReplyForm(${fbIndex})" style="background: var(--light); padding: 5px 10px;">
+                                <i class="fas fa-reply"></i> Reply
+                            </button>
+                        </div>
+                        
+                        <div id="reply-form-${fbIndex}" class="reply-form">
+                            <textarea class="reply-textarea" id="reply-text-${fbIndex}" placeholder="Type your reply to ${fb.studentReg}..."></textarea>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-sm btn-primary" onclick="sendReply(${sessionIndex}, ${fbIndex}, '${fb.studentReg}')" style="padding: 6px 12px;">
+                                    <i class="fas fa-paper-plane"></i> Send
+                                </button>
+                                <button class="btn btn-sm btn-secondary" onclick="hideReplyForm(${fbIndex})" style="padding: 6px 12px;">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            content.innerHTML = html;
+            
+            // Draw chart
+            drawFeedbackChart(feedback);
+        }
+
+        // Draw feedback chart
+        function drawFeedbackChart(feedback) {
+            const canvas = document.getElementById('feedbackChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Count ratings
+            const ratingCounts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+            feedback.forEach(fb => {
+                if (fb.rating >= 1 && fb.rating <= 5) {
+                    ratingCounts[fb.rating]++;
+                }
+            });
+            
+            // Create chart
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
+                    datasets: [{
+                        label: 'Number of Ratings',
+                        data: [ratingCounts[1], ratingCounts[2], ratingCounts[3], ratingCounts[4], ratingCounts[5]],
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(250, 204, 21, 0.7)',
+                            'rgba(132, 204, 22, 0.7)',
+                            'rgba(16, 185, 129, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgb(239, 68, 68)',
+                            'rgb(245, 158, 11)',
+                            'rgb(250, 204, 21)',
+                            'rgb(132, 204, 22)',
+                            'rgb(16, 185, 129)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Show reply form
+        function showReplyForm(fbIndex) {
+            // Hide all reply forms first
+            document.querySelectorAll('.reply-form').forEach(form => {
+                form.style.display = 'none';
+            });
+            
+            // Show the selected form
+            const form = document.getElementById(`reply-form-${fbIndex}`);
+            if (form) {
+                form.style.display = 'block';
+                form.querySelector('textarea').focus();
+            }
+        }
+
+        // Hide reply form
+        function hideReplyForm(fbIndex) {
+            const form = document.getElementById(`reply-form-${fbIndex}`);
+            if (form) {
+                form.style.display = 'none';
+                form.querySelector('textarea').value = '';
+            }
+        }
+
+        // Send reply to student feedback
+        function sendReply(sessionIndex, fbIndex, studentReg) {
+            const replyText = document.getElementById(`reply-text-${fbIndex}`).value.trim();
+            
+            if (!replyText) {
+                showToast('Please enter a reply message', 'error');
+                return;
+            }
+            
+            const feedbackId = `${currentSystemIndex}-${sessionIndex}-${studentReg}`;
+            const replies = JSON.parse(localStorage.getItem('instructorReplies') || '{}');
+            
+            if (!replies[feedbackId]) replies[feedbackId] = [];
+            
+            replies[feedbackId].push({
+                instructorName: currentInstructor.name,
+                reply: replyText,
+                repliedAt: new Date().toISOString()
+            });
+            
+            localStorage.setItem('instructorReplies', JSON.stringify(replies));
+            
+            // Clear form and hide it
+            document.getElementById(`reply-text-${fbIndex}`).value = '';
+            hideReplyForm(fbIndex);
+            
+            // Refresh feedback display
+            loadFeedbackForSession(currentSessionIndex);
+            
+            showToast('Reply sent successfully!', 'success');
+        }
+
+        // Close feedback modal
+        function closeFeedbackModal() {
+            document.getElementById('feedbackModal').classList.remove('active');
+        }
+
+        // Refresh data
+        function refreshData() {
+            if (currentSystemIndex !== null) {
+                const system = ratingSystems[currentSystemIndex];
+                loadSessionManagement(system);
+                initializeRatingsChart(system);
+                showToast('Data refreshed successfully', 'success');
+            }
+        }
+
+        // Logout instructor
+        function logoutInstructor() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear session
+                currentInstructor = null;
+                currentSystemIndex = null;
+                sessionStorage.removeItem('instructorSession');
+                
+                // Reset UI
+                document.getElementById('instructorName').textContent = 'Not Logged In';
+                document.getElementById('instructorRole').textContent = 'Select System';
+                document.getElementById('profilePicture').src = 'default-instructor.png';
+                
+                // Show login interface
+                document.getElementById('loginInterface').style.display = 'block';
+                document.getElementById('sessionManagement').style.display = 'none';
+                
+                // Reset form
+                document.getElementById('systemSelect').value = '';
+                document.getElementById('codeInput').value = '';
+                
+                // Hide error/success messages
+                document.getElementById('errorMessage').style.display = 'none';
+                document.getElementById('successMessage').style.display = 'none';
+                
+                // Destroy chart
+                if (ratingsChart) {
+                    ratingsChart.destroy();
+                    ratingsChart = null;
+                }
+                
+                showToast('Logged out successfully', 'success');
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Escape to close modals
+            if (e.key === 'Escape') {
+                if (document.getElementById('feedbackModal').classList.contains('active')) {
+                    closeFeedbackModal();
+                }
+            }
+            
+            // Ctrl/Cmd + R to refresh
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                refreshData();
+            }
+            
+            // Ctrl/Cmd + L to logout
+            if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+                e.preventDefault();
+                logoutInstructor();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScholarX - Learning Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4A6FFF;
+            --primary-dark: #3A5BDF;
+            --secondary: #1A1F36;
+            --accent: #00C9B7;
+            --accent-light: rgba(0, 201, 183, 0.1);
+            --light: #F8FAFC;
+            --gray-light: #E2E8F0;
+            --gray: #94A3B8;
+            --gray-dark: #64748B;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --beginner: #6366F1;
+            --amateur: #8B5CF6;
+            --semi-pro: #EC4899;
+            --pro: #EF4444;
+            --expert: #F59E0B;
+            --legendary: #10B981;
+            --genius: #06B6D4;
+            --sidebar-width: 260px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #F8FAFC;
+            color: #334155;
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--secondary) 0%, #0F172A 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .app-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .student-badge {
+            background: rgba(0, 201, 183, 0.15);
+            color: var(--accent);
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 24px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: var(--transition);
+            margin: 4px 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: calc(100% - 24px);
+            text-align: left;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: rgba(74, 111, 255, 0.15);
+            color: white;
+            border-left: 4px solid var(--primary);
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .profile-pic {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent);
+        }
+
+        .profile-info h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .profile-info p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .logout-btn {
+            width: 100%;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 30px;
+            transition: var(--transition);
+        }
+
+        /* Header Section */
+        .hub-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .hub-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .hub-header p {
+            color: var(--gray-dark);
+            font-size: 16px;
+        }
+
+        /* User Profile Bar */
+        .user-profile-bar {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
+
+        .profile-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            overflow: hidden;
+            position: relative;
+            border: 3px solid var(--primary);
+        }
+
+        .profile-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-circle .default-avatar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .profile-details h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+
+        .profile-details p {
+            color: var(--gray-dark);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .points-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .badge-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 20px;
+            border-left: 1px solid var(--gray-light);
+            border-right: 1px solid var(--gray-light);
+        }
+
+        .current-badge {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .badge-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .badge-beginner { background: var(--beginner); color: white; }
+        .badge-amateur { background: var(--amateur); color: white; }
+        .badge-semi-pro { background: var(--semi-pro); color: white; }
+        .badge-pro { background: var(--pro); color: white; }
+        .badge-expert { background: var(--expert); color: white; }
+        .badge-legendary { background: var(--legendary); color: white; }
+        .badge-genius { background: var(--genius); color: white; }
+
+        .requests-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .requests-btn {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .requests-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .requests-count {
+            background: var(--danger);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* Badges Info */
+        .badges-info {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .badges-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light);
+        }
+
+        .badges-header i {
+            font-size: 22px;
+            color: var(--primary);
+            width: 40px;
+            height: 40px;
+            background: rgba(74, 111, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .badges-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .badge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .badge-item {
+            padding: 15px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .badge-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+
+        .badge-item.active {
+            background: rgba(74, 111, 255, 0.05);
+            border: 2px solid var(--primary);
+        }
+
+        .badge-item-locked {
+            opacity: 0.7;
+        }
+
+        .badge-icon-small {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .badge-name {
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .badge-points {
+            font-size: 12px;
+            color: var(--gray-dark);
+        }
+
+        .badge-progress {
+            width: 100%;
+            height: 6px;
+            background: var(--gray-light);
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .badge-progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        /* Main Content Layout */
+        .hub-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 1024px) {
+            .hub-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Tutors Section */
+        .tutors-section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            height: fit-content;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light);
+        }
+
+        .section-header i {
+            font-size: 22px;
+            color: var(--primary);
+            width: 40px;
+            height: 40px;
+            background: rgba(74, 111, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .section-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .tutors-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .tutor-card {
+            padding: 15px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .tutor-card:hover {
+            border-color: var(--primary);
+            transform: translateX(5px);
+            box-shadow: var(--shadow);
+        }
+
+        .tutor-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        .tutor-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .tutor-info {
+            flex: 1;
+        }
+
+        .tutor-name {
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+
+        .tutor-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+        }
+
+        /* Rankings Section */
+        .rankings-section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            height: fit-content;
+        }
+
+        .rankings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+
+        .ranking-item:hover {
+            background: var(--light);
+        }
+
+        .ranking-position {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 14px;
+        }
+
+        .position-1 { background: linear-gradient(135deg, #FFD700, #FFA500); }
+        .position-2 { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); }
+        .position-3 { background: linear-gradient(135deg, #CD7F32, #A0522D); }
+        .position-other { background: var(--gray-light); color: var(--gray-dark); }
+
+        .ranking-info {
+            flex: 1;
+        }
+
+        .ranking-name {
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+
+        .ranking-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: var(--gray-dark);
+        }
+
+        .ranking-points {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 500px;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--gray-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--gray);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-modal:hover {
+            color: var(--danger);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid var(--gray-light);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 111, 255, 0.1);
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Requests Modal */
+        .requests-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .request-item {
+            padding: 15px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-sm);
+            margin-bottom: 10px;
+            transition: var(--transition);
+        }
+
+        .request-item:hover {
+            border-color: var(--primary);
+        }
+
+        .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .request-tutor {
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .request-date {
+            color: var(--gray);
+            font-size: 12px;
+        }
+
+        .request-subject {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .request-message {
+            color: var(--gray-dark);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .request-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .status-accepted { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .status-rejected { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(74, 111, 255, 0.25);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(74, 111, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--secondary);
+            border: 1px solid var(--gray-light);
+        }
+
+        .btn-secondary:hover {
+            background: var(--light);
+            border-color: var(--gray);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--secondary);
+            color: white;
+            padding: 12px 18px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 3000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: var(--transition);
+            max-width: 350px;
+            font-size: 14px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast.warning {
+            background: var(--warning);
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1001;
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            font-size: 18px;
+            color: var(--secondary);
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .hub-header h1 {
+                font-size: 24px;
+            }
+            
+            .user-profile-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 20px;
+            }
+            
+            .badge-section, .requests-section {
+                border: none;
+                border-top: 1px solid var(--gray-light);
+                border-bottom: 1px solid var(--gray-light);
+                padding: 15px 0;
+            }
+            
+            .badge-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .modal-content {
+                max-width: 95%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 15px;
+            }
+            
+            .badge-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-footer {
+                flex-direction: column;
+            }
+            
+            .modal-footer .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="logo.png" alt="ScholarX Logo" class="app-logo" onerror="this.style.display='none'">
+            <div>
+                <div class="app-name">ScholarX</div>
+                <div class="student-badge">Learning Hub</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <button class="nav-item" onclick="navigateToDashboard()">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </button>
+            <button class="nav-item" onclick="navigateToRatingFeedback()">
+                <i class="fas fa-star"></i>
+                <span>Rating & Feedback</span>
+            </button>
+            <button class="nav-item" onclick="navigateToSuggestionBox()">
+                <i class="fas fa-comments"></i>
+                <span>Suggestion Box</span>
+            </button>
+            <button class="nav-item active" onclick="navigateToLearningHub()">
+                <i class="fas fa-book-open"></i>
+                <span>Learning HUB</span>
+            </button>
+            <button class="nav-item" onclick="navigateToSettings()">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <img id="sidebarProfilePicture" src="" alt="Profile" class="profile-pic">
+                <div class="profile-info">
+                    <h4 id="sidebarStudentName">Loading...</h4>
+                    <p id="sidebarStudentEmail">Loading...</p>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logoutStudent()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="hub-header">
+            <div>
+                <h1>Learning Hub</h1>
+                <p>Connect with tutors, earn points, and track your progress</p>
+            </div>
+        </div>
+
+        <!-- User Profile Bar -->
+        <div class="user-profile-bar" id="userProfileBar">
+            <div class="profile-section">
+                <div class="profile-circle">
+                    <img id="hubProfilePicture" src="" alt="Profile Picture" onerror="this.style.display='none'">
+                    <div class="default-avatar" id="hubDefaultAvatar">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                </div>
+                <div class="profile-details">
+                    <h3 id="hubStudentName">Loading...</h3>
+                    <p id="hubStudentEmail">Loading...</p>
+                    <div class="points-display">
+                        <i class="fas fa-star"></i>
+                        <span id="userPoints">0</span> Points
+                    </div>
+                </div>
+            </div>
+            
+            <div class="badge-section">
+                <div class="current-badge" id="currentBadgeName">Loading...</div>
+                <div class="badge-icon" id="currentBadgeIcon">
+                    <i class="fas fa-medal"></i>
+                </div>
+                <div class="points-display">
+                    <i class="fas fa-trophy"></i>
+                    <span id="nextBadgePoints">0</span> to next badge
+                </div>
+            </div>
+            
+            <div class="requests-section">
+                <button class="requests-btn" onclick="showRequestsModal()">
+                    <i class="fas fa-bell"></i>
+                    <span>Requests</span>
+                    <div class="requests-count" id="requestsCount">0</div>
+                </button>
+                <small>View appointment requests</small>
+            </div>
+        </div>
+
+        <!-- Badges Info -->
+        <div class="badges-info">
+            <div class="badges-header">
+                <i class="fas fa-trophy"></i>
+                <div>
+                    <h3>Badges & Progression</h3>
+                    <p>Earn points by participating in learning activities</p>
+                </div>
+            </div>
+            <div class="badge-grid" id="badgesGrid">
+                <!-- Badges will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Main Content Layout -->
+        <div class="hub-content">
+            <!-- Tutors Section -->
+            <div class="tutors-section">
+                <div class="section-header">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <div>
+                        <h3>Available Tutors</h3>
+                        <p>Book appointments with expert tutors</p>
+                    </div>
+                </div>
+                <div class="tutors-list" id="tutorsList">
+                    <!-- Tutors will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Rankings Section -->
+            <div class="rankings-section">
+                <div class="section-header">
+                    <i class="fas fa-chart-line"></i>
+                    <div>
+                        <h3>Leaderboard</h3>
+                        <p>Top performers in the learning hub</p>
+                    </div>
+                </div>
+                <div class="rankings-list" id="rankingsList">
+                    <!-- Rankings will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Appointment Modal -->
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Schedule Appointment</h2>
+                <button class="close-modal" onclick="closeAppointmentModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Tutor</label>
+                    <input type="text" id="appointmentTutor" class="form-control" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Date & Time</label>
+                    <input type="datetime-local" id="appointmentDateTime" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Subject / Topic</label>
+                    <input type="text" id="appointmentSubject" class="form-control" placeholder="What do you need help with?" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Additional Details</label>
+                    <textarea id="appointmentDetails" class="form-control" placeholder="Describe what you'd like to cover in the session..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAppointmentModal()">
+                    Cancel
+                </button>
+                <button class="btn btn-primary" onclick="createAppointment()">
+                    <i class="fas fa-calendar-plus"></i>
+                    Create Appointment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Requests Modal -->
+    <div id="requestsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Appointment Requests</h2>
+                <button class="close-modal" onclick="closeRequestsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="requests-list" id="requestsList">
+                    <!-- Requests will be dynamically inserted here -->
+                </div>
+                <div id="noRequestsMessage" style="text-align: center; padding: 40px; color: var(--gray);">
+                    <i class="fas fa-calendar-check" style="font-size: 48px; margin-bottom: 15px;"></i>
+                    <h3 style="color: var(--secondary); margin-bottom: 10px;">No Requests Yet</h3>
+                    <p>When you book appointments with tutors, they'll appear here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Operation completed successfully!</span>
+    </div>
+
+    <script>
+        // Global variables
+        let currentStudent = null;
+        let selectedTutor = null;
+        
+        // Sample data arrays
+        const tutors = [
+            {
+                id: 1,
+                name: "Dr. Sarah Johnson",
+                subject: "Mathematics",
+                points: 1250,
+                badge: "expert",
+                avatar: "",
+                bio: "PhD in Mathematics with 10+ years teaching experience"
+            },
+            {
+                id: 2,
+                name: "Prof. Michael Chen",
+                subject: "Computer Science",
+                points: 980,
+                badge: "semi-pro",
+                avatar: "",
+                bio: "Software Engineer turned educator"
+            },
+            {
+                id: 3,
+                name: "Dr. Emily Williams",
+                subject: "Physics",
+                points: 2100,
+                badge: "legendary",
+                avatar: "",
+                bio: "Theoretical physicist and passionate teacher"
+            },
+            {
+                id: 4,
+                name: "Ms. Jessica Brown",
+                subject: "Chemistry",
+                points: 750,
+                badge: "amateur",
+                avatar: "",
+                bio: "Chemistry lab specialist"
+            },
+            {
+                id: 5,
+                name: "Mr. David Miller",
+                subject: "Biology",
+                points: 3000,
+                badge: "genius",
+                avatar: "",
+                bio: "Medical researcher and tutor"
+            }
+        ];
+
+        const requestsArray = [
+            {
+                id: 1,
+                tutorName: "Dr. Sarah Johnson",
+                date: "2024-04-10 14:00",
+                subject: "Calculus Integration",
+                message: "Need help with integration by parts technique",
+                status: "pending"
+            },
+            {
+                id: 2,
+                tutorName: "Prof. Michael Chen",
+                date: "2024-04-08 10:30",
+                subject: "Data Structures",
+                message: "Understanding binary trees and traversal algorithms",
+                status: "accepted"
+            }
+        ];
+
+        // Badge system configuration
+        const badges = [
+            { name: "Beginner", minPoints: 0, maxPoints: 100, color: "beginner", icon: "fas fa-seedling" },
+            { name: "Amateur", minPoints: 101, maxPoints: 500, color: "amateur", icon: "fas fa-rocket" },
+            { name: "Semi-Pro", minPoints: 501, maxPoints: 1000, color: "semi-pro", icon: "fas fa-medal" },
+            { name: "Pro", minPoints: 1001, maxPoints: 2000, color: "pro", icon: "fas fa-award" },
+            { name: "Expert", minPoints: 2001, maxPoints: 3000, color: "expert", icon: "fas fa-crown" },
+            { name: "Legendary", minPoints: 3001, maxPoints: 5000, color: "legendary", icon: "fas fa-fire" },
+            { name: "Genius", minPoints: 5001, maxPoints: 10000, color: "genius", icon: "fas fa-brain" }
+        ];
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication and load user data
+            checkAuthentication();
+            
+            // Setup mobile menu toggle
+            document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                const sidebar = document.getElementById('sidebar');
+                const menuToggle = document.getElementById('menuToggle');
+                
+                if (window.innerWidth <= 768 && 
+                    !sidebar.contains(event.target) && 
+                    !menuToggle.contains(event.target) && 
+                    sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                }
+            });
+            
+            // Initialize data
+            initializeData();
+        });
+
+        // Check if user is authenticated
+        function checkAuthentication() {
+            const isAuthenticated = sessionStorage.getItem('isAuthenticated');
+            const currentStudentData = sessionStorage.getItem('currentStudent');
+            
+            if (isAuthenticated !== 'true' || !currentStudentData) {
+                showToast('Please login first', 'error');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+                return false;
+            }
+            
+            // Load student data
+            loadLoggedInStudent();
+            return true;
+        }
+
+        // Load the logged-in student data
+        function loadLoggedInStudent() {
+            try {
+                // Get from sessionStorage (set during login)
+                const studentData = JSON.parse(sessionStorage.getItem('currentStudent') || 'null');
+                
+                if (studentData) {
+                    currentStudent = studentData;
+                    
+                    // Get full student data from localStorage
+                    const students = getStudents();
+                    const fullStudentData = students.find(s => s.email === currentStudent.email);
+                    
+                    if (fullStudentData) {
+                        currentStudent = { ...fullStudentData };
+                        console.log("Loaded student:", currentStudent.name);
+                        
+                        // Update UI with student data
+                        updateHubProfile();
+                        
+                    } else {
+                        showToast('Student data not found in database', 'error');
+                        setTimeout(() => {
+                            logoutStudent();
+                        }, 1500);
+                    }
+                } else {
+                    showToast('Please login first', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                }
+            } catch (error) {
+                console.error("Error loading student data:", error);
+                showToast('Error loading profile data', 'error');
+            }
+        }
+
+        // Get all students from localStorage
+        function getStudents() {
+            return JSON.parse(localStorage.getItem('students')) || [];
+        }
+
+        // Initialize all data
+        function initializeData() {
+            // Load student points or initialize if not exists
+            if (!currentStudent.points) {
+                currentStudent.points = 250; // Default starting points
+                updateStudentInLocalStorage();
+            }
+            
+            // Initialize sidebar profile
+            updateSidebarProfile();
+            
+            // Initialize hub profile
+            updateHubProfile();
+            
+            // Render badges
+            renderBadges();
+            
+            // Render tutors
+            renderTutors();
+            
+            // Render rankings
+            renderRankings();
+            
+            // Update requests count
+            updateRequestsCount();
+        }
+
+        // Update sidebar profile
+        function updateSidebarProfile() {
+            if (!currentStudent) return;
+            
+            document.getElementById('sidebarStudentName').textContent = currentStudent.name || "Student";
+            document.getElementById('sidebarStudentEmail').textContent = currentStudent.email || "student@scholarx.edu";
+            
+            // Update profile picture
+            const sidebarProfilePic = document.getElementById('sidebarProfilePicture');
+            if (currentStudent.profilePic) {
+                sidebarProfilePic.src = currentStudent.profilePic;
+                sidebarProfilePic.style.display = 'block';
+            }
+        }
+
+        // Update hub profile section
+        function updateHubProfile() {
+            if (!currentStudent) return;
+            
+            // Update name and email
+            document.getElementById('hubStudentName').textContent = currentStudent.name || "Student";
+            document.getElementById('hubStudentEmail').textContent = currentStudent.email || "student@scholarx.edu";
+            
+            // Update profile picture
+            const hubProfilePic = document.getElementById('hubProfilePicture');
+            const hubDefaultAvatar = document.getElementById('hubDefaultAvatar');
+            
+            if (currentStudent.profilePic) {
+                hubProfilePic.src = currentStudent.profilePic;
+                hubProfilePic.style.display = 'block';
+                hubDefaultAvatar.style.display = 'none';
+            } else {
+                hubProfilePic.style.display = 'none';
+                hubDefaultAvatar.style.display = 'flex';
+            }
+            
+            // Update points
+            document.getElementById('userPoints').textContent = currentStudent.points || 0;
+            
+            // Update badge display
+            updateBadgeDisplay();
+        }
+
+        // Update badge display based on points
+        function updateBadgeDisplay() {
+            const points = currentStudent.points || 0;
+            let currentBadge = badges[0];
+            let nextBadge = badges[1];
+            
+            // Find current badge
+            for (let i = badges.length - 1; i >= 0; i--) {
+                if (points >= badges[i].minPoints) {
+                    currentBadge = badges[i];
+                    nextBadge = badges[i + 1] || null;
+                    break;
+                }
+            }
+            
+            // Update current badge display
+            document.getElementById('currentBadgeName').textContent = currentBadge.name;
+            const badgeIcon = document.getElementById('currentBadgeIcon');
+            badgeIcon.className = `badge-icon badge-${currentBadge.color}`;
+            badgeIcon.innerHTML = `<i class="${currentBadge.icon}"></i>`;
+            
+            // Calculate points to next badge
+            if (nextBadge) {
+                const pointsNeeded = nextBadge.minPoints - points;
+                document.getElementById('nextBadgePoints').textContent = pointsNeeded;
+            } else {
+                document.getElementById('nextBadgePoints').textContent = "MAX";
+            }
+        }
+
+        // Render badges grid
+        function renderBadges() {
+            const badgesGrid = document.getElementById('badgesGrid');
+            const points = currentStudent.points || 0;
+            
+            badgesGrid.innerHTML = '';
+            
+            badges.forEach((badge, index) => {
+                const isActive = points >= badge.minPoints;
+                const isCurrent = points >= badge.minPoints && points <= badge.maxPoints;
+                const progress = Math.min(100, ((points - badge.minPoints) / (badge.maxPoints - badge.minPoints)) * 100);
+                
+                const badgeElement = document.createElement('div');
+                badgeElement.className = `badge-item ${isCurrent ? 'active' : ''} ${!isActive ? 'badge-item-locked' : ''}`;
+                badgeElement.innerHTML = `
+                    <div class="badge-icon-small badge-${badge.color}">
+                        <i class="${badge.icon}"></i>
+                    </div>
+                    <div class="badge-name">${badge.name}</div>
+                    <div class="badge-points">${badge.minPoints} - ${badge.maxPoints} points</div>
+                    ${isActive ? `
+                        <div class="badge-progress">
+                            <div class="badge-progress-fill bg-${badge.color}" style="width: ${isCurrent ? progress : 100}%"></div>
+                        </div>
+                    ` : ''}
+                `;
+                
+                // Add color style for progress fill
+                const style = document.createElement('style');
+                style.textContent = `.bg-${badge.color} { background-color: var(--${badge.color}); }`;
+                document.head.appendChild(style);
+                
+                badgesGrid.appendChild(badgeElement);
+            });
+        }
+
+        // Render tutors list
+        function renderTutors() {
+            const tutorsList = document.getElementById('tutorsList');
+            tutorsList.innerHTML = '';
+            
+            tutors.forEach(tutor => {
+                const tutorElement = document.createElement('div');
+                tutorElement.className = 'tutor-card';
+                tutorElement.onclick = () => openAppointmentModal(tutor);
+                tutorElement.innerHTML = `
+                    <div class="tutor-avatar">
+                        ${tutor.avatar ? `<img src="${tutor.avatar}" alt="${tutor.name}">` : 
+                        `<div style="width:100%;height:100%;background:linear-gradient(135deg, var(--${tutor.badge}), var(--primary));display:flex;align-items:center;justify-content:center;color:white;">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>`}
+                    </div>
+                    <div class="tutor-info">
+                        <div class="tutor-name">${tutor.name}</div>
+                        <div style="color: var(--gray-dark); font-size: 12px; margin-bottom: 5px;">${tutor.subject}</div>
+                        <div class="tutor-badge bg-${tutor.badge}">${tutor.badge.replace('-', ' ').toUpperCase()}</div>
+                    </div>
+                    <div style="color: var(--primary); font-weight: 600;">
+                        <i class="fas fa-star"></i> ${tutor.points}
+                    </div>
+                `;
+                
+                tutorsList.appendChild(tutorElement);
+            });
+        }
+
+        // Render rankings
+        function renderRankings() {
+            const rankingsList = document.getElementById('rankingsList');
+            
+            // Get all students with points
+            const students = getStudents();
+            const rankedStudents = students
+                .filter(s => s.points !== undefined)
+                .sort((a, b) => b.points - a.points)
+                .slice(0, 10); // Top 10
+            
+            // Add current student if not in top 10
+            if (!rankedStudents.find(s => s.email === currentStudent.email)) {
+                rankedStudents.push(currentStudent);
+            }
+            
+            rankingsList.innerHTML = '';
+            
+            rankedStudents.forEach((student, index) => {
+                const positionClass = index === 0 ? 'position-1' : 
+                                    index === 1 ? 'position-2' : 
+                                    index === 2 ? 'position-3' : 'position-other';
+                
+                // Get badge for this student
+                let studentBadge = badges[0];
+                for (let i = badges.length - 1; i >= 0; i--) {
+                    if (student.points >= badges[i].minPoints) {
+                        studentBadge = badges[i];
+                        break;
+                    }
+                }
+                
+                const rankingElement = document.createElement('div');
+                rankingElement.className = 'ranking-item';
+                rankingElement.innerHTML = `
+                    <div class="ranking-position ${positionClass}">
+                        ${index + 1}
+                    </div>
+                    <div class="ranking-info">
+                        <div class="ranking-name">
+                            ${student.name} ${student.email === currentStudent.email ? ' (You)' : ''}
+                        </div>
+                        <div class="ranking-stats">
+                            <span class="ranking-points">
+                                <i class="fas fa-star"></i> ${student.points || 0} points
+                            </span>
+                            <span class="tutor-badge bg-${studentBadge.color}" style="font-size: 10px; padding: 2px 8px;">
+                                ${studentBadge.name}
+                            </span>
+                        </div>
+                    </div>
+                `;
+                
+                rankingsList.appendChild(rankingElement);
+            });
+        }
+
+        // Update student in localStorage
+        function updateStudentInLocalStorage() {
+            const students = getStudents();
+            const studentIndex = students.findIndex(s => s.email === currentStudent.email);
+            
+            if (studentIndex !== -1) {
+                students[studentIndex] = { ...students[studentIndex], ...currentStudent };
+                localStorage.setItem('students', JSON.stringify(students));
+            }
+        }
+
+        // Open appointment modal
+        function openAppointmentModal(tutor) {
+            selectedTutor = tutor;
+            document.getElementById('appointmentTutor').value = tutor.name;
+            document.getElementById('appointmentDateTime').value = '';
+            document.getElementById('appointmentSubject').value = '';
+            document.getElementById('appointmentDetails').value = '';
+            document.getElementById('appointmentModal').classList.add('active');
+        }
+
+        // Close appointment modal
+        function closeAppointmentModal() {
+            document.getElementById('appointmentModal').classList.remove('active');
+            selectedTutor = null;
+        }
+
+        // Create appointment
+        function createAppointment() {
+            const dateTime = document.getElementById('appointmentDateTime').value;
+            const subject = document.getElementById('appointmentSubject').value.trim();
+            const details = document.getElementById('appointmentDetails').value.trim();
+            
+            if (!dateTime) {
+                showToast('Please select date and time', 'error');
+                return;
+            }
+            
+            if (!subject) {
+                showToast('Please enter a subject', 'error');
+                return;
+            }
+            
+            // Create new request
+            const newRequest = {
+                id: Date.now(),
+                tutorName: selectedTutor.name,
+                date: formatDateTime(dateTime),
+                subject: subject,
+                message: details,
+                status: 'pending',
+                studentName: currentStudent.name,
+                studentEmail: currentStudent.email
+            };
+            
+            // Add to requests array
+            requestsArray.push(newRequest);
+            
+            // Show success message
+            showToast(`Appointment request sent to ${selectedTutor.name}`, 'success');
+            
+            // Update requests count
+            updateRequestsCount();
+            
+            // Close modal
+            closeAppointmentModal();
+        }
+
+        // Format date time for display
+        function formatDateTime(dateTimeStr) {
+            const date = new Date(dateTimeStr);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            }) + ' ' + date.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        // Show requests modal
+        function showRequestsModal() {
+            const requestsList = document.getElementById('requestsList');
+            const noRequestsMessage = document.getElementById('noRequestsMessage');
+            
+            // Filter requests for current student
+            const studentRequests = requestsArray.filter(req => req.studentEmail === currentStudent.email);
+            
+            if (studentRequests.length === 0) {
+                requestsList.style.display = 'none';
+                noRequestsMessage.style.display = 'block';
+            } else {
+                requestsList.style.display = 'block';
+                noRequestsMessage.style.display = 'none';
+                
+                requestsList.innerHTML = '';
+                studentRequests.forEach(request => {
+                    const requestElement = document.createElement('div');
+                    requestElement.className = 'request-item';
+                    requestElement.innerHTML = `
+                        <div class="request-header">
+                            <div class="request-tutor">${request.tutorName}</div>
+                            <div class="request-date">${request.date}</div>
+                        </div>
+                        <div class="request-subject">${request.subject}</div>
+                        <div class="request-message">${request.message || 'No additional details provided'}</div>
+                        <div class="request-status status-${request.status}">${request.status.toUpperCase()}</div>
+                    `;
+                    requestsList.appendChild(requestElement);
+                });
+            }
+            
+            document.getElementById('requestsModal').classList.add('active');
+        }
+
+        // Close requests modal
+        function closeRequestsModal() {
+            document.getElementById('requestsModal').classList.remove('active');
+        }
+
+        // Update requests count
+        function updateRequestsCount() {
+            const studentRequests = requestsArray.filter(req => 
+                req.studentEmail === currentStudent.email && req.status === 'pending'
+            );
+            document.getElementById('requestsCount').textContent = studentRequests.length;
+        }
+
+        // Award points to a user
+        function awardPoints(recipientEmail, points) {
+            // This would be called when someone gives points to another user
+            const students = getStudents();
+            const recipientIndex = students.findIndex(s => s.email === recipientEmail);
+            
+            if (recipientIndex !== -1) {
+                students[recipientIndex].points = (students[recipientIndex].points || 0) + points;
+                localStorage.setItem('students', JSON.stringify(students));
+                
+                // If the recipient is the current user, update display
+                if (recipientEmail === currentStudent.email) {
+                    currentStudent.points = students[recipientIndex].points;
+                    updateHubProfile();
+                    renderBadges();
+                    renderRankings();
+                }
+                
+                return true;
+            }
+            return false;
+        }
+
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Navigation functions
+        function navigateToDashboard() { 
+            window.location.href = 'studentdash.html';
+        }
+        
+        function navigateToRatingFeedback() { 
+            window.location.href = 'studentR&F.html'; 
+        }
+        
+        function navigateToSuggestionBox() { 
+            window.location.href = 'studentbox.html'; 
+        }
+        
+        function navigateToLearningHub() { 
+            // Already on learning hub page
+        }
+        
+        function navigateToSettings() { 
+            window.location.href = 'setting.html'; 
+        }
+
+        // Logout student
+        function logoutStudent() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear session (but keep localStorage for next login)
+                sessionStorage.removeItem('isAuthenticated');
+                sessionStorage.removeItem('currentStudent');
+                
+                // Redirect to login page
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            // Set icon based on type
+            if (type === 'success') {
+                toast.querySelector('i').className = 'fas fa-check-circle';
+            } else if (type === 'error') {
+                toast.querySelector('i').className = 'fas fa-exclamation-circle';
+            } else if (type === 'warning') {
+                toast.querySelector('i').className = 'fas fa-exclamation-triangle';
+            } else if (type === 'info') {
+                toast.querySelector('i').className = 'fas fa-info-circle';
+            }
+            
+            toastMessage.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Demo function to add points (for testing)
+        function addDemoPoints(points) {
+            if (!currentStudent) return;
+            
+            currentStudent.points = (currentStudent.points || 0) + points;
+            updateStudentInLocalStorage();
+            updateHubProfile();
+            renderBadges();
+            renderRankings();
+            
+            showToast(`+${points} points awarded!`, 'success');
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Escape to close modals
+            if (e.key === 'Escape') {
+                if (document.getElementById('appointmentModal').classList.contains('active')) {
+                    closeAppointmentModal();
+                }
+                if (document.getElementById('requestsModal').classList.contains('active')) {
+                    closeRequestsModal();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
